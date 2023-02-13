@@ -1,0 +1,242 @@
+---
+title: "Calibrarion of Ordinal Posterior Predictions"
+author: "Teemu Säilynoja"
+date: "2023-02-04"
+date-modified: "`r format(Sys.Date(), '%Y-%m-%d')`"
+image: "../../docs/case_studies/ordinal/ordinal_files/figure-html/reliability-diagrams_1-1.svg"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-tools: true
+    code-line-numbers: true
+    default-image-extension: svg
+    fig-format: svg
+# knitr:
+#   opts_chunk:
+#     classes : "dark-light"
+
+---
+
+```{r}
+#| label: options
+#| code-summary: "Imports & options"
+#| output: false
+#| message: false
+
+library("bayesplot")
+library("cmdstanr")
+library("ggplot2")
+library("khroma")
+library("quartoExtra")
+
+
+# Source for the modified reliability plot
+source("../../code/helpers.R")
+
+good_theme <- bayesplot::theme_default(base_family = "Sans") + theme(
+  axis.text = element_text(colour = "#666666", size = 12),
+  axis.ticks = element_line(colour = "#666666"),
+  title = element_text(colour = "#666666", size = 16),
+  plot.subtitle = element_text(colour = "#666666", size = 14),
+  legend.text = element_text(colour = "#666666", size = 12),
+  legend.title = element_text(colour = "#666666", size = 14),
+  axis.line = element_line(colour = "#666666"))
+
+theme_set(good_theme)
+bayesplot_theme_set(good_theme)
+color_scheme_set(scheme = c(unname(colour("vibrant")(7)[c(3,2,5,4,1,6)])))
+
+scale_colour_discrete = scale_colour_vibrant
+scale_fill_discrete = scale_fill_vibrant
+
+
+# darkmode_theme_set(
+#     dark = ggthemes::theme_stata(scheme = "s1rcolor"),
+#     light = ggthemes::theme_stata(scheme = "s1color")
+# )
+
+
+SEED <- 236543
+set.seed(SEED)
+SAVE_FITS = TRUE
+```
+
+This notebook highlights posterior predictive visualizations when the 
+posterior predictive distribution is ordinal.
+
+As shown below, the ordinal nature of the predictions allows us to use the
+cumulative posterior predictive mass function to assess the calibration of the 
+posterior.
+
+## Data set
+Below, I use synthetic data generated from observations from $K$ Gaussians with
+varying means.
+
+$$\begin{align}
+x_n &\sim \mathcal N\!\!\left(k, 0.5^2\right), &\text{for } n \in\{1,\dots,N\}\\
+k &\sim \text{Categorical}(\theta_k),&\\
+\theta_k &= \frac 1 K, &\text{for } k \in \{1, \dots, K\}.
+\end{align}$$
+
+```{r}
+#| label: data_generation
+#| code-summary: Data generation
+K <- 5
+N <- 1500
+sigma <- .5
+c <- sample(1:K, N, replace = T)
+x <- rnorm(N, c, sigma)
+standata_gmm <- list(K = K,
+                     N = N,
+                     x = x,
+                     y = c,
+                     sigma = sigma)
+
+```
+
+```{r}
+#| label: data_densities
+#| dev.args : 
+#|   bg: transparent
+ggplot(data.frame(standata_gmm)) +
+  geom_density(aes(x = x,
+                   colour = as.factor(y),
+                   fill = as.factor(y),
+                   group = as.factor(y)), alpha = .5) +
+  legend_none() +
+  xlab("") + ylab("") + ggtitle(paste("The data", sep = ""))
+```
+
+## Model
+
+The data is fit with two models, both structured to first normalize the data and
+then fit a GMM with K = `r K`` 
+```{r}
+#| label: model_code
+#| code-summary: Read model code
+
+gmm <- cmdstan_model("../../code/stan-models/gmm_classifier.stan")
+gmm
+```
+
+```{r}
+#| warning: false
+#| label: fit_models
+#| code-summary: run CmdStanR
+fit_1 <- tryCatch(
+  expr = {readRDS(paste("../../code/stan-models/fits/gmm_classifier_1_",SEED,".RDS", sep=""))},
+  error = function(e) {
+    fit <- gmm$sample(data = c(standata_gmm, list(correct_sigma = 0)),
+                      parallel_chains = 4,
+                      refresh = 0,
+                      seed = SEED,
+                      show_messages = F)
+    if (SAVE_FITS) {fit$save_object(
+      paste("../../code/stan-models/fits/gmm_classifier_1_",SEED,".RDS", sep=""))}
+    return(fit)},
+  finally = {message("Finished model 1.")})
+
+fit_2 <- tryCatch(
+  expr = readRDS(paste("../../code/stan-models/fits/gmm_classifier_2_",SEED,".RDS", sep="")),
+  error = function(e) {
+    fit <- gmm$sample(data = c(standata_gmm, list(correct_sigma = 1)),
+               parallel_chains = 4,
+               refresh = 0,
+               seed = SEED,
+               show_messages = F)
+    if (SAVE_FITS) {fit$save_object(
+      paste("../../code/stan-models/fits/gmm_classifier_2_",SEED,".RDS", sep=""))}
+    return(fit)},
+  finally = {message("Finished model 2.")})
+```
+
+```{r}
+#| label: classification probabilities
+p_1 <- matrix(colMeans(fit_1$draws(variables = "ppm", format = "matrix")), ncol = K)
+p_2 <- matrix(colMeans(fit_2$draws(variables = "ppm", format = "matrix")), ncol = K)
+```
+
+## PPC
+
+:::{layout-ncol="2"}
+
+```{r}
+#| label: ppc_bars_1
+#| fig-align: right
+#| fig-width: 4
+#| fig-height: 4
+#| dev.args : 
+#|   bg: transparent
+
+ppc_bars(y = as.numeric(c),
+         yrep = fit_1$draws(variables = "yrep",format = "matrix")) +
+  ggtitle("Model 1") +
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+#| label: ppc_bars_2
+#| fig-align: left
+#| fig-width: 4
+#| fig-height: 4
+#| dev.args : 
+#|   bg: transparent
+ppc_bars(y = as.numeric(c),
+         yrep = fit_2$draws(variables = "yrep", format = "matrix")) +
+  ggtitle("Model 2") +
+  theme(legend.position = "bottom") 
+```
+:::
+
+
+:::{layout-ncol="2"}
+```{r}
+#| label: reliability-diagrams_1
+#| fig-align: right
+#| fig-width: 4
+#| fig-height: 4
+#| dev.args : 
+#|   bg: transparent
+
+for (k in 1:(K - 1)) {
+  p1 <- plot_dotted_reliabilitydiag(
+    y = as.numeric(c <= k),
+    x = if (k != 1) pmin(1, rowSums(p_1[, 1:k])) else p_1[, k],
+    quantiles = K * N / 100,
+    dot_scale = .5) +
+    ggtitle(paste("Model 1: P(y <= ", k, ")", sep=""),
+            subtitle = "1 dot = 100 observations")
+  
+  print(p1)
+}
+```
+
+```{r}
+#| label: reliability-diagrams_2
+#| fig-align: left
+#| fig-width: 4
+#| fig-height: 4
+#| dev.args : 
+#|   bg: transparent
+
+for (k in 1:(K - 1)) {
+  p2 <- plot_dotted_reliabilitydiag(
+    y = as.numeric(c <= k),
+    x = if (k != 1) pmin(1, rowSums(p_2[, 1:k])) else p_2[, k],
+    quantiles = K * N / 100,
+    dot_scale = .5) +
+    ggtitle(paste("Model 2: P(y <= ", k, ")", sep=""),
+            subtitle = "1 dot = 100 observations")
+  
+  print(p2)
+  }
+```
+
+:::
+
+
+
+
+
