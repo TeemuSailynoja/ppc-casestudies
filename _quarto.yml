@@ -3,6 +3,8 @@ project:
   output-dir: docs
 website:
   title: Posterior Predictive Checks
+  twitter-card:
+    image: "docs/case_studies/ordinal/ordinal_files/figure-html/reliability-diagrams_1-1.svg"
   navbar:
     right:
       - text: Home
