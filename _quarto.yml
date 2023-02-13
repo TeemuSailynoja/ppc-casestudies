@@ -5,16 +5,18 @@ website:
   title: Posterior Predictive Checks
   navbar:
     right:
-    - icon: github
-      href: https://github.com/TeemuSailynoja/ppc-casestudies
+      - text: Home
+        href: index.html
+      - icon: github
+        href: https://github.com/TeemuSailynoja/ppc-casestudies
 format:
   html:
     theme:
       light:
       - flatly
-      - light.scss
+      - styles/light.scss
       dark:
       - darkly
-      - dark.scss
-    css: styles.css
+      - styles/dark.scss
+    css: styles/styles.css
 freeze: auto

@@ -11,7 +11,7 @@
     "href": "index.html",
     "title": "Case Studies in Visual Posterior Predictive Checks",
     "section": "",
-    "text": "Calibrarion of Ordinal Posterior Predictions\n\n\n\n\n\n\n\n\n\n\n\n\nFeb 4, 2023\n\n\nTeemu Säilynoja\n\n\n\n\n\n\n  \n\n\n\n\nPPC Visualizations for Categorical Data\n\n\nPalmer Penguins\n\n\nCalibration plots for the easy tasks of identifying penguin species in the Palmer Penguins data set.\n\n\n\n\n\n\nJan 30, 2023\n\n\nTeemu Säilynoja\n\n\n\n\n\n\nNo matching items"
+    "text": "Calibrarion of Ordinal Posterior Predictions\n\n\n\n\n\n\n\n\n\n\n\n\nFeb 4, 2023\n\n\nTeemu Säilynoja\n\n\n\n\n\n\n  \n\n\n\n\nPPC: Ordinal predictions\n\n\nBayesian network model for predicting the number of pregnancies in an IVF treatment.\n\n\n\n\n\n\n\n\n\nFeb 1, 2023\n\n\nTeemu Säilynoja\n\n\n\n\n\n\n  \n\n\n\n\nPPC Visualizations for Categorical Data\n\n\nPalmer Penguins\n\n\nCalibration plots for the easy tasks of identifying penguin species in the Palmer Penguins data set.\n\n\n\n\n\n\nJan 30, 2023\n\n\nTeemu Säilynoja\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "case_studies/categorical/categorical_palmer_penguins.html",
@@ -47,5 +47,26 @@
     "title": "Calibrarion of Ordinal Posterior Predictions",
     "section": "PPC",
     "text": "PPC\n\n\n\n\nCode\nppc_bars(y = as.numeric(c),\n         yrep = fit_1$draws(variables = \"yrep\",format = \"matrix\")) +\n  ggtitle(\"Model 1\") +\n  theme(legend.position = \"bottom\")\n\n\n\n\n\n\n\n\n\n\n\nCode\nppc_bars(y = as.numeric(c),\n         yrep = fit_2$draws(variables = \"yrep\", format = \"matrix\")) +\n  ggtitle(\"Model 2\") +\n  theme(legend.position = \"bottom\") \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCode\nfor (k in 1:(K - 1)) {\n  p1 <- plot_dotted_reliabilitydiag(\n    y = as.numeric(c <= k),\n    x = if (k != 1) pmin(1, rowSums(p_1[, 1:k])) else p_1[, k],\n    quantiles = K * N / 100,\n    dot_scale = .5) +\n    ggtitle(paste(\"Model 1: P(y <= \", k, \")\", sep=\"\"),\n            subtitle = \"1 dot = 100 observations\")\n  \n  print(p1)\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCode\nfor (k in 1:(K - 1)) {\n  p2 <- plot_dotted_reliabilitydiag(\n    y = as.numeric(c <= k),\n    x = if (k != 1) pmin(1, rowSums(p_2[, 1:k])) else p_2[, k],\n    quantiles = K * N / 100,\n    dot_scale = .5) +\n    ggtitle(paste(\"Model 2: P(y <= \", k, \")\", sep=\"\"),\n            subtitle = \"1 dot = 100 observations\")\n  \n  print(p2)\n  }"
+  },
+  {
+    "objectID": "case_studies/ordinal/bn_classifier.html",
+    "href": "case_studies/ordinal/bn_classifier.html",
+    "title": "PPC: Ordinal predictions",
+    "section": "",
+    "text": "Code\nlibrary(cmdstanr)\nlibrary(DirichletReg)\nlibrary(bayesplot)\nlibrary(ggplot2)\nlibrary(reliabilitydiag)\nlibrary(khroma)\n\n# Source for the modified reliability plot\nsource(\"../../code/helpers.R\")\n\ngood_theme <- bayesplot::theme_default(base_family = \"Sans\") + theme(\n  axis.text = element_text(colour = \"#666666\", size = 12),\n  axis.ticks = element_line(colour = \"#666666\"),\n  title = element_text(colour = \"#666666\", size = 16),\n  plot.subtitle = element_text(colour = \"#666666\", size = 14),\n  legend.text = element_text(colour = \"#666666\", size = 12),\n  legend.title = element_text(colour = \"#666666\", size = 14),\n  axis.line = element_line(colour = \"#666666\"))\n\ntheme_set(good_theme)\nbayesplot_theme_set(good_theme)\ncolor_scheme_set(scheme = c(unname(colour(\"vibrant\")(7)[c(3,2,5,4,1,6)])))\n\nscale_colour_discrete = scale_colour_vibrant\nscale_fill_discrete = scale_fill_vibrant\n\nSEED <- 236543\nset.seed(SEED)\nSAVE_FITS = TRUE\nSIM_IIRM = TRUE # whether to use the inferred parameter values from the paper."
+  },
+  {
+    "objectID": "case_studies/ordinal/bn_classifier.html#parameters-of-interest",
+    "href": "case_studies/ordinal/bn_classifier.html#parameters-of-interest",
+    "title": "PPC: Ordinal predictions",
+    "section": "Parameters of interest",
+    "text": "Parameters of interest\n\n\nCode\ncolor_scheme_set(scheme = color(\"BuRd\")(13)[6:1])\nmcmc_areas(fit$draws(variables = \"pU\", format = \"matrix\")) + vline_at(v = pU, colour = \"#666666\")\n\n\n\n\n\n\n\nCode\nmcmc_areas(fit$draws(variables = \"pE\", format = \"matrix\")[,-1]) + vline_at(v = pE[-1], colour = \"#666666\")"
+  },
+  {
+    "objectID": "case_studies/ordinal/bn_classifier.html#population-parameters",
+    "href": "case_studies/ordinal/bn_classifier.html#population-parameters",
+    "title": "PPC: Ordinal predictions",
+    "section": "Population parameters",
+    "text": "Population parameters\nFor some reason, the authors also model the frequencies of the different observation categories in the population. These are recovered quite well.\n\n\nCode\nmcmc_areas(fit$draws(variables = \"pA\", format = \"matrix\")) + vline_at(v = pA, colour = \"#666666\")\n\n\n\n\n\n\n\nCode\nmcmc_areas(fit$draws(variables = \"pS\", format = \"matrix\")) + vline_at(v = pS, colour = \"#666666\")"
   }
 ]

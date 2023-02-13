@@ -1,0 +1,188 @@
+---
+title: "PPC: Ordinal predictions"
+subtitle: "Bayesian network model for predicting the number of pregnancies in an IVF treatment."
+date: "2023-02-01"
+date-modified: "`r format(Sys.Date(), '%Y-%m-%d')`"
+author: "Teemu Säilynoja"
+image: "../../docs/case_studies/ordinal/bn_classifier_files/figure-html/ppc_bars-1.svg"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-tools: true
+    code-line-numbers: true
+    default-image-extension: svg
+    fig-format: svg
+
+---
+
+
+```{r imports_and_options, message = FALSE}
+library(cmdstanr)
+library(DirichletReg)
+library(bayesplot)
+library(ggplot2)
+library(reliabilitydiag)
+library(khroma)
+
+# Source for the modified reliability plot
+source("../../code/helpers.R")
+
+good_theme <- bayesplot::theme_default(base_family = "Sans") + theme(
+  axis.text = element_text(colour = "#666666", size = 12),
+  axis.ticks = element_line(colour = "#666666"),
+  title = element_text(colour = "#666666", size = 16),
+  plot.subtitle = element_text(colour = "#666666", size = 14),
+  legend.text = element_text(colour = "#666666", size = 12),
+  legend.title = element_text(colour = "#666666", size = 14),
+  axis.line = element_line(colour = "#666666"))
+
+theme_set(good_theme)
+bayesplot_theme_set(good_theme)
+color_scheme_set(scheme = c(unname(colour("vibrant")(7)[c(3,2,5,4,1,6)])))
+
+scale_colour_discrete = scale_colour_vibrant
+scale_fill_discrete = scale_fill_vibrant
+
+SEED <- 236543
+set.seed(SEED)
+SAVE_FITS = TRUE
+SIM_IIRM = TRUE # whether to use the inferred parameter values from the paper.
+
+```
+
+# Data generation
+
+```{r data}
+standata <- list()
+standata$P = 0
+while(max(standata$P) < 3) {
+  pA = c(rdirichlet(1, rep(3, 3)))
+  if (SIM_IIRM == TRUE) {
+    pU = c(.78, .58, .26) # IIRM value from paper
+  } else {
+    pU = sort(runif(3), decreasing = T)
+  }
+  pS = c(rdirichlet(1, rep(3 , 4)))
+  if (SIM_IIRM == TRUE) {
+    pE = c(0, .07, .21, .39)# IIRM value from paper
+  } else {
+    pE = c(0, sort(runif(3)))
+  }
+  N <- 388
+  standata$N = N
+  standata$A = sample(1:3, size = N, replace = T, prob = pA)
+  standata$S = t(replicate(n = N, sample(1:4, size = 3, replace = T, prob = pS)))
+  standata$P = sapply(1:N, function(n) rbinom(1,1, pU[standata$A[n]]) * sum(rbinom(3,1, pE[standata$S[n, ]])))
+}
+```
+
+# Bayesian network model
+Stan implementation of the BN model introduced in the paper. In short, the number of pregnancies is modeled to be equal to the number of viable embryos, $e$, if the uterus is receptive, $u$.
+The observed variables are the patient age, $A$ split to 3 age categories, and the quality of the transferred embryo, $S \in \{1,\dots,4\}$, where $1$ means no transfer and categories $2$ to $4$ are in a ascending order based on quality.
+
+$$
+P = \mathbb I(U = u)\sum_{i=1}^3\mathbb I(E_i = e),
+$$
+```{r load_model}
+model <- cmdstan_model(stan_file = "../../code/stan-models/bn_classifier.stan")
+model
+```
+
+The model samples very quickly with no apparent issues during the sampling process.
+
+```{r fit_model}
+fit <- model$sample(data = standata,
+                    parallel_chains = 4,
+                    refresh = 0,
+                    seed = SEED)
+```
+
+```{r ppm_computation}
+# Compute the posterior means of the predictive probability mass of each case
+ppm <- matrix(colMeans(fit$draws(variables = "ppm", format = "matrix")), ncol = 4)
+```
+
+# Posterior predictive checks
+
+A crude visualization of the posterior frequency of each case with 90% posterior predictive intervals. 
+```{r}
+#| label: ppc_bars
+#| dev.args : 
+#|   bg: transparent
+ppc_bars(y = standata$P,
+         yrep = fit$draws(variables = "yrep", format = "matrix") - 1,
+         prob = .9,
+         freq = F)
+```
+
+
+```{r}
+#| label: reldiag_1
+#| dev.args : 
+#|   bg: transparent
+plot_dotted_reliabilitydiag(x = pmin(1, rowSums(ppm[,-1])),
+                y = as.numeric(standata$P != 0), quantiles = 50) +
+  labs(title = "Calibration: P >= 1")
+```
+
+
+```{r}
+#| label: reldiag_2
+#| dev.args : 
+#|   bg: transparent
+plot_dotted_reliabilitydiag(x = pmin(1, rowSums(ppm[,-c(1,2)])),
+                y = as.numeric(standata$P > 1), quantiles = 50) +
+  labs(title = "Calibration: P >= 2")
+```
+
+```{r}
+#| label: reldiag_3
+#| dev.args : 
+#|   bg: transparent
+plot_dotted_reliabilitydiag(x = pmin(1, ppm[,c(4)]), y = as.numeric(standata$P == 3), quantiles = 20) +
+  labs(title = "Calibration: P = 3")
+```
+
+
+# Marginal posteriors
+
+## Parameters of interest
+```{r}
+#| label: mcmc_areas_pU
+#| dev.args : 
+#|   bg: transparent
+color_scheme_set(scheme = color("BuRd")(13)[6:1])
+mcmc_areas(fit$draws(variables = "pU", format = "matrix")) + vline_at(v = pU, colour = "#666666")
+```
+
+```{r}
+#| label: mcmc_areas_pE
+#| dev.args : 
+#|   bg: transparent
+mcmc_areas(fit$draws(variables = "pE", format = "matrix")[,-1]) + vline_at(v = pE[-1], colour = "#666666")
+```
+
+
+## Population parameters
+
+For some reason, the authors also model the frequencies of the different
+observation categories in the population. These are recovered quite well.
+
+```{r}
+#| label: mcmc_areas_pA
+#| dev.args : 
+#|   bg: transparent
+mcmc_areas(fit$draws(variables = "pA", format = "matrix")) + vline_at(v = pA, colour = "#666666")
+```
+
+
+```{r}
+#| label: mcmc_areas_pS
+#| dev.args : 
+#|   bg: transparent
+mcmc_areas(fit$draws(variables = "pS", format = "matrix")) + vline_at(v = pS, colour = "#666666")
+```
+
+
+
