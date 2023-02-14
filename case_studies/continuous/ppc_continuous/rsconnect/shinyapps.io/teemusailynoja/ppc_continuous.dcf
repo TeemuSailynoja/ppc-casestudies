@@ -1,0 +1,13 @@
+name: ppc_continuous
+title: ppc_continuous
+username:
+account: teemusailynoja
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8311381
+bundleId: 6846199
+url: https://teemusailynoja.shinyapps.io/ppc_continuous/
+when: 1676397655.39528
+lastSyncTime: 1676397655.39529
+asMultiple: FALSE
+asStatic: FALSE

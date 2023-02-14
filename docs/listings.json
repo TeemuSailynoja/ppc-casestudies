@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/case_studies/continuous/kde_with_discontinuities.html",
       "/case_studies/ordinal/ordinal.html",
       "/case_studies/ordinal/bn_classifier.html",
       "/case_studies/categorical/categorical_palmer_penguins.html"
