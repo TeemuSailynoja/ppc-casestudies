@@ -37,9 +37,14 @@ ui <- fluidPage(
                         max = 500,
                         value = 250),
             sliderInput("n_na",
-                        "Number of zeros:",
+                        "Number of added values:",
                         min = 0,
                         max = 99,
+                        value = 0),
+            sliderInput("discontinuity_location",
+                        "Location of added values:",
+                        min = -1,
+                        max = 3,
                         value = 0),
             sliderInput("n_rep",
                         "Number of posterior predictions:",
@@ -65,7 +70,7 @@ server <- function(input, output) {
         n_na <- input$n_na
         x <- rnorm(N, 1, .5)
         if (n_na > 0) {
-            x[1:n_na] <- 0
+            x[1:n_na] <- input$discontinuity_location
         }
 
         mu_0 <- 0
@@ -150,7 +155,7 @@ server <- function(input, output) {
             }
             }
         p_ecdf
-    })
+    }, bg = "transparent")
 
     output$ecdfdiffPlot <- renderPlot({
         data <- dataInput()
