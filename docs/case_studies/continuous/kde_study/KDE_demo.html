@@ -9,7 +9,7 @@
 <meta name="author" content="Teemu Säilynoja">
 <meta name="dcterms.date" content="2023-02-22">
 
-<title>Posterior Predictive Checks - Kernel density estimate</title>
+<title>Posterior Predictive Checks - Pitfalls of density plots</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -101,7 +101,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="../../../styles/styles.css">
-<meta name="twitter:title" content="Posterior Predictive Checks - Kernel density estimate">
+<meta name="twitter:title" content="Posterior Predictive Checks - Pitfalls of density plots">
 <meta name="twitter:description" content="">
 <meta name="twitter:image" content="docs/case_studies/ordinal/ordinal_files/figure-html/reliability-diagrams_1-1.svg">
 <meta name="twitter:card" content="summary_large_image">
@@ -145,7 +145,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-page-left">
-      <div class="quarto-title-block"><div><h1 class="title">Kernel density estimate</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+      <div class="quarto-title-block"><div><h1 class="title">Pitfalls of density plots</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
                       </div>
   </div>
     
@@ -261,9 +261,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1), <span class="at">bw =</span> <span class="st">"SJ"</span>, <span class="at">geom =</span> <span class="st">"line"</span>) <span class="sc">+</span></span>
 <span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">xlab</span>(<span class="fu">TeX</span>(<span class="st">"$x$"</span>)) <span class="sc">+</span></span>
 <span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">ylab</span>(<span class="st">"KDE"</span>) <span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">ggtitle</span>(<span class="st">"Laplace distribution"</span>,<span class="at">subtitle =</span> <span class="st">"N = 1000</span><span class="sc">\n</span><span class="st">x ~ 1/2 exp(-|x|)"</span>)</span>
-<span id="cb4-6"><a href="#cb4-6"></a></span>
-<span id="cb4-7"><a href="#cb4-7"></a>p1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">ggtitle</span>(<span class="st">"Laplace distribution"</span>,<span class="at">subtitle =</span> <span class="st">"N = 1000</span><span class="sc">\n</span><span class="st">x ~ 1/2 exp(-|x|)"</span>) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a>p1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="KDE_demo_files/figure-html/unnamed-chunk-4-1.png" class="quarto-discovered-preview-image img-fluid" width="672"></p>
@@ -302,9 +303,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">colour =</span> <span class="st">"Naive"</span>), <span class="at">geom =</span> <span class="st">"line"</span>) <span class="sc">+</span> </span>
 <span id="cb7-4"><a href="#cb7-4"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bounded observation"</span>, <span class="at">subtitle =</span> <span class="st">"KDE computed with and without the bounds"</span>,</span>
 <span id="cb7-5"><a href="#cb7-5"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"$x$"</span>), <span class="at">y =</span> <span class="st">"KDE"</span>, <span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
-<span id="cb7-7"><a href="#cb7-7"></a></span>
-<span id="cb7-8"><a href="#cb7-8"></a>p2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
+<span id="cb7-8"><a href="#cb7-8"></a></span>
+<span id="cb7-9"><a href="#cb7-9"></a>p2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="KDE_demo_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
@@ -352,9 +354,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-10"><a href="#cb10-10"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Observation with point mass"</span>,</span>
 <span id="cb10-11"><a href="#cb10-11"></a>       <span class="at">subtitle =</span> <span class="st">"KDE for full observation and only continuous part"</span>,</span>
 <span id="cb10-12"><a href="#cb10-12"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"x"</span>), <span class="at">y =</span> <span class="st">""</span>, <span class="at">colour =</span> <span class="st">""</span>, <span class="at">fill =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb10-13"><a href="#cb10-13"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span> <span class="fu">scale_fill_vibrant</span>()</span>
-<span id="cb10-14"><a href="#cb10-14"></a></span>
-<span id="cb10-15"><a href="#cb10-15"></a>p3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-13"><a href="#cb10-13"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span> <span class="fu">scale_fill_vibrant</span>() <span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
+<span id="cb10-15"><a href="#cb10-15"></a></span>
+<span id="cb10-16"><a href="#cb10-16"></a>p3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <p><img src="KDE_demo_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
@@ -792,7 +795,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="sourceCode" id="cb13" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1"></a><span class="co">---</span></span>
-<span id="cb13-2"><a href="#cb13-2"></a><span class="an">title:</span><span class="co"> "Kernel density estimate"</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="an">title:</span><span class="co"> "Pitfalls of density plots"</span></span>
 <span id="cb13-3"><a href="#cb13-3"></a><span class="an">author:</span><span class="co"> "Teemu Säilynoja"</span></span>
 <span id="cb13-4"><a href="#cb13-4"></a><span class="an">date:</span><span class="co"> "2023-02-22"</span></span>
 <span id="cb13-5"><a href="#cb13-5"></a><span class="an">date-modified:</span><span class="co"> "`r format(Sys.Date(), '%Y-%m-%d')`"</span></span>
@@ -869,114 +872,117 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb13-84"><a href="#cb13-84"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1), <span class="at">bw =</span> <span class="st">"SJ"</span>, <span class="at">geom =</span> <span class="st">"line"</span>) <span class="sc">+</span></span>
 <span id="cb13-85"><a href="#cb13-85"></a>  <span class="fu">xlab</span>(<span class="fu">TeX</span>(<span class="st">"$x$"</span>)) <span class="sc">+</span></span>
 <span id="cb13-86"><a href="#cb13-86"></a>  <span class="fu">ylab</span>(<span class="st">"KDE"</span>) <span class="sc">+</span></span>
-<span id="cb13-87"><a href="#cb13-87"></a>  <span class="fu">ggtitle</span>(<span class="st">"Laplace distribution"</span>,<span class="at">subtitle =</span> <span class="st">"N = 1000</span><span class="sc">\n</span><span class="st">x ~ 1/2 exp(-|x|)"</span>)</span>
-<span id="cb13-88"><a href="#cb13-88"></a></span>
-<span id="cb13-89"><a href="#cb13-89"></a>p1</span>
-<span id="cb13-90"><a href="#cb13-90"></a><span class="in">```</span></span>
-<span id="cb13-91"><a href="#cb13-91"></a></span>
-<span id="cb13-92"><a href="#cb13-92"></a>The ECDF difference plot doesn't suggest any issues with the KDE</span>
-<span id="cb13-95"><a href="#cb13-95"></a><span class="in">```{r}</span></span>
-<span id="cb13-96"><a href="#cb13-96"></a><span class="co">#| message: false</span></span>
-<span id="cb13-97"><a href="#cb13-97"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p1, <span class="dv">1</span>, x1))(x0) <span class="sc">-</span> x0))</span>
-<span id="cb13-98"><a href="#cb13-98"></a><span class="in">```</span></span>
-<span id="cb13-99"><a href="#cb13-99"></a></span>
+<span id="cb13-87"><a href="#cb13-87"></a>  <span class="fu">ggtitle</span>(<span class="st">"Laplace distribution"</span>,<span class="at">subtitle =</span> <span class="st">"N = 1000</span><span class="sc">\n</span><span class="st">x ~ 1/2 exp(-|x|)"</span>) <span class="sc">+</span></span>
+<span id="cb13-88"><a href="#cb13-88"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
+<span id="cb13-89"><a href="#cb13-89"></a></span>
+<span id="cb13-90"><a href="#cb13-90"></a>p1</span>
+<span id="cb13-91"><a href="#cb13-91"></a><span class="in">```</span></span>
+<span id="cb13-92"><a href="#cb13-92"></a></span>
+<span id="cb13-93"><a href="#cb13-93"></a>The ECDF difference plot doesn't suggest any issues with the KDE</span>
+<span id="cb13-96"><a href="#cb13-96"></a><span class="in">```{r}</span></span>
+<span id="cb13-97"><a href="#cb13-97"></a><span class="co">#| message: false</span></span>
+<span id="cb13-98"><a href="#cb13-98"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p1, <span class="dv">1</span>, x1))(x0) <span class="sc">-</span> x0))</span>
+<span id="cb13-99"><a href="#cb13-99"></a><span class="in">```</span></span>
 <span id="cb13-100"><a href="#cb13-100"></a></span>
-<span id="cb13-101"><a href="#cb13-101"></a><span class="fu">## Bounded continuous data</span></span>
-<span id="cb13-102"><a href="#cb13-102"></a></span>
-<span id="cb13-103"><a href="#cb13-103"></a>Sample as above, but the distribution is truncated to the interval $<span class="co">[</span><span class="ot">-1.5,0.5</span><span class="co">]</span>$.</span>
-<span id="cb13-104"><a href="#cb13-104"></a></span>
-<span id="cb13-107"><a href="#cb13-107"></a><span class="in">```{r}</span></span>
-<span id="cb13-108"><a href="#cb13-108"></a><span class="co">#| label: sample 2</span></span>
-<span id="cb13-109"><a href="#cb13-109"></a>x2 <span class="ot">&lt;-</span> x1</span>
-<span id="cb13-110"><a href="#cb13-110"></a><span class="cf">while</span> (<span class="sc">!</span><span class="fu">all</span>(x2 <span class="sc">&gt;</span> <span class="sc">-</span><span class="fl">1.5</span>, x2 <span class="sc">&lt;</span> .<span class="dv">5</span>)) {</span>
-<span id="cb13-111"><a href="#cb13-111"></a>  mask <span class="ot">&lt;-</span> (x2 <span class="sc">&lt;</span> <span class="sc">-</span><span class="fl">1.5</span> <span class="sc">|</span> x2 <span class="sc">&gt;</span> .<span class="dv">5</span>)</span>
-<span id="cb13-112"><a href="#cb13-112"></a>  x2[mask] <span class="ot">=</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">1</span>), <span class="fu">sum</span>(mask), <span class="at">replace =</span> T) <span class="sc">*</span> <span class="fu">rexp</span>(<span class="fu">sum</span>(mask))</span>
-<span id="cb13-113"><a href="#cb13-113"></a>}</span>
-<span id="cb13-114"><a href="#cb13-114"></a><span class="in">```</span></span>
-<span id="cb13-115"><a href="#cb13-115"></a></span>
-<span id="cb13-116"><a href="#cb13-116"></a>We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.</span>
-<span id="cb13-119"><a href="#cb13-119"></a><span class="in">```{r}</span></span>
-<span id="cb13-120"><a href="#cb13-120"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
-<span id="cb13-121"><a href="#cb13-121"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">colour =</span> <span class="st">"Bounded"</span>), <span class="at">geom =</span> <span class="st">"line"</span>, <span class="at">bounds =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.5</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>
-<span id="cb13-122"><a href="#cb13-122"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">colour =</span> <span class="st">"Naive"</span>), <span class="at">geom =</span> <span class="st">"line"</span>) <span class="sc">+</span> </span>
-<span id="cb13-123"><a href="#cb13-123"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bounded observation"</span>, <span class="at">subtitle =</span> <span class="st">"KDE computed with and without the bounds"</span>,</span>
-<span id="cb13-124"><a href="#cb13-124"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"$x$"</span>), <span class="at">y =</span> <span class="st">"KDE"</span>, <span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb13-125"><a href="#cb13-125"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
-<span id="cb13-126"><a href="#cb13-126"></a></span>
-<span id="cb13-127"><a href="#cb13-127"></a>p2</span>
-<span id="cb13-128"><a href="#cb13-128"></a><span class="in">```</span></span>
-<span id="cb13-129"><a href="#cb13-129"></a></span>
-<span id="cb13-130"><a href="#cb13-130"></a>The ECDF difference plot also suggests calibration issues with the unbounded KDE. </span>
-<span id="cb13-133"><a href="#cb13-133"></a><span class="in">```{r}</span></span>
-<span id="cb13-134"><a href="#cb13-134"></a><span class="co">#| label: ecdf 2</span></span>
-<span id="cb13-135"><a href="#cb13-135"></a><span class="co">#| message: false</span></span>
-<span id="cb13-136"><a href="#cb13-136"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p2, <span class="dv">2</span>, x2))(x0) <span class="sc">-</span> x0,</span>
-<span id="cb13-137"><a href="#cb13-137"></a>                   <span class="at">colour =</span> <span class="st">"Naive"</span>)) <span class="sc">+</span></span>
-<span id="cb13-138"><a href="#cb13-138"></a>  <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p2, <span class="dv">1</span>, x2))(x0) <span class="sc">-</span> x0, <span class="at">colour =</span> <span class="st">"Bounded"</span>)) <span class="sc">+</span></span>
-<span id="cb13-139"><a href="#cb13-139"></a>  <span class="fu">labs</span>(<span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb13-140"><a href="#cb13-140"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
-<span id="cb13-141"><a href="#cb13-141"></a><span class="in">```</span></span>
-<span id="cb13-142"><a href="#cb13-142"></a></span>
-<span id="cb13-143"><a href="#cb13-143"></a></span>
-<span id="cb13-144"><a href="#cb13-144"></a><span class="fu">## Continuous data with point masses</span></span>
+<span id="cb13-101"><a href="#cb13-101"></a></span>
+<span id="cb13-102"><a href="#cb13-102"></a><span class="fu">## Bounded continuous data</span></span>
+<span id="cb13-103"><a href="#cb13-103"></a></span>
+<span id="cb13-104"><a href="#cb13-104"></a>Sample as above, but the distribution is truncated to the interval $<span class="co">[</span><span class="ot">-1.5,0.5</span><span class="co">]</span>$.</span>
+<span id="cb13-105"><a href="#cb13-105"></a></span>
+<span id="cb13-108"><a href="#cb13-108"></a><span class="in">```{r}</span></span>
+<span id="cb13-109"><a href="#cb13-109"></a><span class="co">#| label: sample 2</span></span>
+<span id="cb13-110"><a href="#cb13-110"></a>x2 <span class="ot">&lt;-</span> x1</span>
+<span id="cb13-111"><a href="#cb13-111"></a><span class="cf">while</span> (<span class="sc">!</span><span class="fu">all</span>(x2 <span class="sc">&gt;</span> <span class="sc">-</span><span class="fl">1.5</span>, x2 <span class="sc">&lt;</span> .<span class="dv">5</span>)) {</span>
+<span id="cb13-112"><a href="#cb13-112"></a>  mask <span class="ot">&lt;-</span> (x2 <span class="sc">&lt;</span> <span class="sc">-</span><span class="fl">1.5</span> <span class="sc">|</span> x2 <span class="sc">&gt;</span> .<span class="dv">5</span>)</span>
+<span id="cb13-113"><a href="#cb13-113"></a>  x2[mask] <span class="ot">=</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">1</span>), <span class="fu">sum</span>(mask), <span class="at">replace =</span> T) <span class="sc">*</span> <span class="fu">rexp</span>(<span class="fu">sum</span>(mask))</span>
+<span id="cb13-114"><a href="#cb13-114"></a>}</span>
+<span id="cb13-115"><a href="#cb13-115"></a><span class="in">```</span></span>
+<span id="cb13-116"><a href="#cb13-116"></a></span>
+<span id="cb13-117"><a href="#cb13-117"></a>We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.</span>
+<span id="cb13-120"><a href="#cb13-120"></a><span class="in">```{r}</span></span>
+<span id="cb13-121"><a href="#cb13-121"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb13-122"><a href="#cb13-122"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">colour =</span> <span class="st">"Bounded"</span>), <span class="at">geom =</span> <span class="st">"line"</span>, <span class="at">bounds =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.5</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb13-123"><a href="#cb13-123"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">colour =</span> <span class="st">"Naive"</span>), <span class="at">geom =</span> <span class="st">"line"</span>) <span class="sc">+</span> </span>
+<span id="cb13-124"><a href="#cb13-124"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bounded observation"</span>, <span class="at">subtitle =</span> <span class="st">"KDE computed with and without the bounds"</span>,</span>
+<span id="cb13-125"><a href="#cb13-125"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"$x$"</span>), <span class="at">y =</span> <span class="st">"KDE"</span>, <span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb13-126"><a href="#cb13-126"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span></span>
+<span id="cb13-127"><a href="#cb13-127"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
+<span id="cb13-128"><a href="#cb13-128"></a></span>
+<span id="cb13-129"><a href="#cb13-129"></a>p2</span>
+<span id="cb13-130"><a href="#cb13-130"></a><span class="in">```</span></span>
+<span id="cb13-131"><a href="#cb13-131"></a></span>
+<span id="cb13-132"><a href="#cb13-132"></a>The ECDF difference plot also suggests calibration issues with the unbounded KDE. </span>
+<span id="cb13-135"><a href="#cb13-135"></a><span class="in">```{r}</span></span>
+<span id="cb13-136"><a href="#cb13-136"></a><span class="co">#| label: ecdf 2</span></span>
+<span id="cb13-137"><a href="#cb13-137"></a><span class="co">#| message: false</span></span>
+<span id="cb13-138"><a href="#cb13-138"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p2, <span class="dv">2</span>, x2))(x0) <span class="sc">-</span> x0,</span>
+<span id="cb13-139"><a href="#cb13-139"></a>                   <span class="at">colour =</span> <span class="st">"Naive"</span>)) <span class="sc">+</span></span>
+<span id="cb13-140"><a href="#cb13-140"></a>  <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p2, <span class="dv">1</span>, x2))(x0) <span class="sc">-</span> x0, <span class="at">colour =</span> <span class="st">"Bounded"</span>)) <span class="sc">+</span></span>
+<span id="cb13-141"><a href="#cb13-141"></a>  <span class="fu">labs</span>(<span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb13-142"><a href="#cb13-142"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
+<span id="cb13-143"><a href="#cb13-143"></a><span class="in">```</span></span>
+<span id="cb13-144"><a href="#cb13-144"></a></span>
 <span id="cb13-145"><a href="#cb13-145"></a></span>
-<span id="cb13-146"><a href="#cb13-146"></a>Simulate an example, where measurements under a certain threshold are reported as zeros.</span>
-<span id="cb13-147"><a href="#cb13-147"></a>Here $x\sim\exp(x)$ with all values sampled below $0.1$ reported as zero. </span>
-<span id="cb13-150"><a href="#cb13-150"></a><span class="in">```{r}</span></span>
-<span id="cb13-151"><a href="#cb13-151"></a><span class="co">#| label: sample 3</span></span>
-<span id="cb13-152"><a href="#cb13-152"></a>x3 <span class="ot">&lt;-</span> <span class="fu">rexp</span>(<span class="dv">1000</span>, <span class="dv">1</span>)</span>
-<span id="cb13-153"><a href="#cb13-153"></a>x3[x3 <span class="sc">&lt;</span> .<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb13-154"><a href="#cb13-154"></a><span class="in">```</span></span>
-<span id="cb13-155"><a href="#cb13-155"></a></span>
-<span id="cb13-156"><a href="#cb13-156"></a>If the measurement threshold is known, the data can be visualized as a mixture of</span>
-<span id="cb13-157"><a href="#cb13-157"></a>a discrete point mass and a continuous distribution. The "naive" KDE seems to </span>
-<span id="cb13-158"><a href="#cb13-158"></a>under estimate the density near $0.1$, and can't show the spike at zero. </span>
-<span id="cb13-159"><a href="#cb13-159"></a></span>
-<span id="cb13-160"><a href="#cb13-160"></a>Below, the density of the continuous mixture component is scaled by $P(x \neq 0)$</span>
-<span id="cb13-161"><a href="#cb13-161"></a>to make the area of the bar and the KDE together add to one.</span>
-<span id="cb13-164"><a href="#cb13-164"></a><span class="in">```{r}</span></span>
-<span id="cb13-165"><a href="#cb13-165"></a>p3 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
-<span id="cb13-166"><a href="#cb13-166"></a>  <span class="fu">geom_rect</span>(</span>
-<span id="cb13-167"><a href="#cb13-167"></a>    <span class="fu">aes</span>(<span class="at">xmin =</span> <span class="dv">0</span>, <span class="at">xmax =</span> .<span class="dv">1</span>, <span class="at">ymin =</span> <span class="dv">0</span>, <span class="at">ymax =</span> <span class="dv">10</span> <span class="sc">*</span> <span class="fu">sum</span>(x3 <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">length</span>(x3), </span>
-<span id="cb13-168"><a href="#cb13-168"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>, <span class="at">fill =</span> <span class="st">"Mixture"</span>),</span>
-<span id="cb13-169"><a href="#cb13-169"></a>    <span class="at">alpha =</span> .<span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb13-170"><a href="#cb13-170"></a>  <span class="fu">stat_density</span>(</span>
-<span id="cb13-171"><a href="#cb13-171"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>], <span class="at">y =</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>(x3 <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">length</span>(x3)) <span class="sc">*</span> <span class="fu">after_stat</span>(density), </span>
-<span id="cb13-172"><a href="#cb13-172"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>, <span class="at">fill =</span> <span class="st">"Naive"</span>), <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">bounds =</span> <span class="fu">c</span>(.<span class="dv">1</span>, <span class="cn">Inf</span>), <span class="at">outline.type =</span> <span class="st">"upper"</span>) <span class="sc">+</span></span>
-<span id="cb13-173"><a href="#cb13-173"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x3, <span class="at">colour =</span> <span class="st">"Naive"</span>, <span class="at">fill =</span> <span class="st">"Naive"</span>), <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">linewidth =</span> <span class="dv">1</span>, <span class="at">outline.type =</span> <span class="st">"upper"</span>) <span class="sc">+</span></span>
-<span id="cb13-174"><a href="#cb13-174"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Observation with point mass"</span>,</span>
-<span id="cb13-175"><a href="#cb13-175"></a>       <span class="at">subtitle =</span> <span class="st">"KDE for full observation and only continuous part"</span>,</span>
-<span id="cb13-176"><a href="#cb13-176"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"x"</span>), <span class="at">y =</span> <span class="st">""</span>, <span class="at">colour =</span> <span class="st">""</span>, <span class="at">fill =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb13-177"><a href="#cb13-177"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span> <span class="fu">scale_fill_vibrant</span>()</span>
-<span id="cb13-178"><a href="#cb13-178"></a></span>
-<span id="cb13-179"><a href="#cb13-179"></a>p3</span>
-<span id="cb13-180"><a href="#cb13-180"></a><span class="in">```</span></span>
+<span id="cb13-146"><a href="#cb13-146"></a><span class="fu">## Continuous data with point masses</span></span>
+<span id="cb13-147"><a href="#cb13-147"></a></span>
+<span id="cb13-148"><a href="#cb13-148"></a>Simulate an example, where measurements under a certain threshold are reported as zeros.</span>
+<span id="cb13-149"><a href="#cb13-149"></a>Here $x\sim\exp(x)$ with all values sampled below $0.1$ reported as zero. </span>
+<span id="cb13-152"><a href="#cb13-152"></a><span class="in">```{r}</span></span>
+<span id="cb13-153"><a href="#cb13-153"></a><span class="co">#| label: sample 3</span></span>
+<span id="cb13-154"><a href="#cb13-154"></a>x3 <span class="ot">&lt;-</span> <span class="fu">rexp</span>(<span class="dv">1000</span>, <span class="dv">1</span>)</span>
+<span id="cb13-155"><a href="#cb13-155"></a>x3[x3 <span class="sc">&lt;</span> .<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb13-156"><a href="#cb13-156"></a><span class="in">```</span></span>
+<span id="cb13-157"><a href="#cb13-157"></a></span>
+<span id="cb13-158"><a href="#cb13-158"></a>If the measurement threshold is known, the data can be visualized as a mixture of</span>
+<span id="cb13-159"><a href="#cb13-159"></a>a discrete point mass and a continuous distribution. The "naive" KDE seems to </span>
+<span id="cb13-160"><a href="#cb13-160"></a>under estimate the density near $0.1$, and can't show the spike at zero. </span>
+<span id="cb13-161"><a href="#cb13-161"></a></span>
+<span id="cb13-162"><a href="#cb13-162"></a>Below, the density of the continuous mixture component is scaled by $P(x \neq 0)$</span>
+<span id="cb13-163"><a href="#cb13-163"></a>to make the area of the bar and the KDE together add to one.</span>
+<span id="cb13-166"><a href="#cb13-166"></a><span class="in">```{r}</span></span>
+<span id="cb13-167"><a href="#cb13-167"></a>p3 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb13-168"><a href="#cb13-168"></a>  <span class="fu">geom_rect</span>(</span>
+<span id="cb13-169"><a href="#cb13-169"></a>    <span class="fu">aes</span>(<span class="at">xmin =</span> <span class="dv">0</span>, <span class="at">xmax =</span> .<span class="dv">1</span>, <span class="at">ymin =</span> <span class="dv">0</span>, <span class="at">ymax =</span> <span class="dv">10</span> <span class="sc">*</span> <span class="fu">sum</span>(x3 <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">length</span>(x3), </span>
+<span id="cb13-170"><a href="#cb13-170"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>, <span class="at">fill =</span> <span class="st">"Mixture"</span>),</span>
+<span id="cb13-171"><a href="#cb13-171"></a>    <span class="at">alpha =</span> .<span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb13-172"><a href="#cb13-172"></a>  <span class="fu">stat_density</span>(</span>
+<span id="cb13-173"><a href="#cb13-173"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>], <span class="at">y =</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>(x3 <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">length</span>(x3)) <span class="sc">*</span> <span class="fu">after_stat</span>(density), </span>
+<span id="cb13-174"><a href="#cb13-174"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>, <span class="at">fill =</span> <span class="st">"Naive"</span>), <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">bounds =</span> <span class="fu">c</span>(.<span class="dv">1</span>, <span class="cn">Inf</span>), <span class="at">outline.type =</span> <span class="st">"upper"</span>) <span class="sc">+</span></span>
+<span id="cb13-175"><a href="#cb13-175"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> x3, <span class="at">colour =</span> <span class="st">"Naive"</span>, <span class="at">fill =</span> <span class="st">"Naive"</span>), <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">linewidth =</span> <span class="dv">1</span>, <span class="at">outline.type =</span> <span class="st">"upper"</span>) <span class="sc">+</span></span>
+<span id="cb13-176"><a href="#cb13-176"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Observation with point mass"</span>,</span>
+<span id="cb13-177"><a href="#cb13-177"></a>       <span class="at">subtitle =</span> <span class="st">"KDE for full observation and only continuous part"</span>,</span>
+<span id="cb13-178"><a href="#cb13-178"></a>       <span class="at">x =</span> <span class="fu">TeX</span>(<span class="st">"x"</span>), <span class="at">y =</span> <span class="st">""</span>, <span class="at">colour =</span> <span class="st">""</span>, <span class="at">fill =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb13-179"><a href="#cb13-179"></a>  <span class="fu">scale_colour_vibrant</span>() <span class="sc">+</span> <span class="fu">scale_fill_vibrant</span>() <span class="sc">+</span></span>
+<span id="cb13-180"><a href="#cb13-180"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>))</span>
 <span id="cb13-181"><a href="#cb13-181"></a></span>
-<span id="cb13-182"><a href="#cb13-182"></a>The calibration of the KDE for the continuous part should be inspected separately,</span>
-<span id="cb13-183"><a href="#cb13-183"></a>as the scaled density above would show miscalibration due to missing part of the</span>
-<span id="cb13-184"><a href="#cb13-184"></a>observation distribution.  </span>
-<span id="cb13-187"><a href="#cb13-187"></a><span class="in">```{r}</span></span>
-<span id="cb13-188"><a href="#cb13-188"></a>p4 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
-<span id="cb13-189"><a href="#cb13-189"></a>  <span class="fu">stat_density</span>(</span>
-<span id="cb13-190"><a href="#cb13-190"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>], </span>
-<span id="cb13-191"><a href="#cb13-191"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>), <span class="at">bounds =</span> <span class="fu">c</span>(.<span class="dv">1</span>, <span class="cn">Inf</span>),</span>
-<span id="cb13-192"><a href="#cb13-192"></a>    <span class="at">geom =</span> <span class="st">"line"</span>)</span>
-<span id="cb13-193"><a href="#cb13-193"></a><span class="in">```</span></span>
-<span id="cb13-194"><a href="#cb13-194"></a></span>
-<span id="cb13-195"><a href="#cb13-195"></a>Again, the ECDF difference plot suggest issues with the naive approach and thus </span>
-<span id="cb13-196"><a href="#cb13-196"></a>could be used to warn user if the naive density plot is drawn.</span>
-<span id="cb13-199"><a href="#cb13-199"></a><span class="in">```{r}</span></span>
-<span id="cb13-200"><a href="#cb13-200"></a><span class="co">#| label: ecdf 3</span></span>
-<span id="cb13-201"><a href="#cb13-201"></a><span class="co">#| message: false</span></span>
-<span id="cb13-202"><a href="#cb13-202"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p3, <span class="dv">3</span>, x3))(x0) <span class="sc">-</span> x0, <span class="at">colour =</span> <span class="st">"Naive"</span>)) <span class="sc">+</span></span>
-<span id="cb13-203"><a href="#cb13-203"></a>  <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p4, <span class="dv">1</span>, x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>]))(x0) <span class="sc">-</span> x0, </span>
-<span id="cb13-204"><a href="#cb13-204"></a>                <span class="at">colour =</span> <span class="st">"Mixture"</span>)) <span class="sc">+</span></span>
-<span id="cb13-205"><a href="#cb13-205"></a>  <span class="fu">labs</span>(<span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb13-206"><a href="#cb13-206"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
-<span id="cb13-207"><a href="#cb13-207"></a><span class="in">```</span></span>
-<span id="cb13-208"><a href="#cb13-208"></a></span>
-<span id="cb13-209"><a href="#cb13-209"></a></span>
-<span id="cb13-210"><a href="#cb13-210"></a></span>
+<span id="cb13-182"><a href="#cb13-182"></a>p3</span>
+<span id="cb13-183"><a href="#cb13-183"></a><span class="in">```</span></span>
+<span id="cb13-184"><a href="#cb13-184"></a></span>
+<span id="cb13-185"><a href="#cb13-185"></a>The calibration of the KDE for the continuous part should be inspected separately,</span>
+<span id="cb13-186"><a href="#cb13-186"></a>as the scaled density above would show miscalibration due to missing part of the</span>
+<span id="cb13-187"><a href="#cb13-187"></a>observation distribution.  </span>
+<span id="cb13-190"><a href="#cb13-190"></a><span class="in">```{r}</span></span>
+<span id="cb13-191"><a href="#cb13-191"></a>p4 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb13-192"><a href="#cb13-192"></a>  <span class="fu">stat_density</span>(</span>
+<span id="cb13-193"><a href="#cb13-193"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>], </span>
+<span id="cb13-194"><a href="#cb13-194"></a>        <span class="at">colour =</span> <span class="st">"Mixture"</span>), <span class="at">bounds =</span> <span class="fu">c</span>(.<span class="dv">1</span>, <span class="cn">Inf</span>),</span>
+<span id="cb13-195"><a href="#cb13-195"></a>    <span class="at">geom =</span> <span class="st">"line"</span>)</span>
+<span id="cb13-196"><a href="#cb13-196"></a><span class="in">```</span></span>
+<span id="cb13-197"><a href="#cb13-197"></a></span>
+<span id="cb13-198"><a href="#cb13-198"></a>Again, the ECDF difference plot suggest issues with the naive approach and thus </span>
+<span id="cb13-199"><a href="#cb13-199"></a>could be used to warn user if the naive density plot is drawn.</span>
+<span id="cb13-202"><a href="#cb13-202"></a><span class="in">```{r}</span></span>
+<span id="cb13-203"><a href="#cb13-203"></a><span class="co">#| label: ecdf 3</span></span>
+<span id="cb13-204"><a href="#cb13-204"></a><span class="co">#| message: false</span></span>
+<span id="cb13-205"><a href="#cb13-205"></a>p0 <span class="sc">+</span> <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p3, <span class="dv">3</span>, x3))(x0) <span class="sc">-</span> x0, <span class="at">colour =</span> <span class="st">"Naive"</span>)) <span class="sc">+</span></span>
+<span id="cb13-206"><a href="#cb13-206"></a>  <span class="fu">geom_step</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">ecdf</span>(<span class="fu">pit_from_densityplot</span>(p4, <span class="dv">1</span>, x3[x3 <span class="sc">&gt;</span> <span class="dv">0</span>]))(x0) <span class="sc">-</span> x0, </span>
+<span id="cb13-207"><a href="#cb13-207"></a>                <span class="at">colour =</span> <span class="st">"Mixture"</span>)) <span class="sc">+</span></span>
+<span id="cb13-208"><a href="#cb13-208"></a>  <span class="fu">labs</span>(<span class="at">colour =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb13-209"><a href="#cb13-209"></a>  <span class="fu">scale_colour_vibrant</span>()</span>
+<span id="cb13-210"><a href="#cb13-210"></a><span class="in">```</span></span>
+<span id="cb13-211"><a href="#cb13-211"></a></span>
+<span id="cb13-212"><a href="#cb13-212"></a></span>
+<span id="cb13-213"><a href="#cb13-213"></a></span>
 </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

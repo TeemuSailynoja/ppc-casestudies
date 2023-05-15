@@ -1,5 +1,5 @@
 ---
-title: "Kernel density estimate"
+title: "Pitfalls of density plots"
 author: "Teemu Säilynoja"
 date: "2023-02-22"
 date-modified: "`r format(Sys.Date(), '%Y-%m-%d')`"
@@ -76,7 +76,8 @@ p1 <- ggplot() +
   stat_density(aes(x = x1), bw = "SJ", geom = "line") +
   xlab(TeX("$x$")) +
   ylab("KDE") +
-  ggtitle("Laplace distribution",subtitle = "N = 1000\nx ~ 1/2 exp(-|x|)")
+  ggtitle("Laplace distribution",subtitle = "N = 1000\nx ~ 1/2 exp(-|x|)") +
+  scale_y_continuous(expand = c(0,NA))
 
 p1
 ```
@@ -108,7 +109,8 @@ p2 <- ggplot() +
   stat_density(aes(x = x2, colour = "Naive"), geom = "line") + 
   labs(title = "Bounded observation", subtitle = "KDE computed with and without the bounds",
        x = TeX("$x$"), y = "KDE", colour = "") +
-  scale_colour_vibrant()
+  scale_colour_vibrant() +
+  scale_y_continuous(expand = c(0,NA))
 
 p2
 ```
@@ -154,7 +156,8 @@ p3 <- ggplot() +
   labs(title = "Observation with point mass",
        subtitle = "KDE for full observation and only continuous part",
        x = TeX("x"), y = "", colour = "", fill = "") +
-  scale_colour_vibrant() + scale_fill_vibrant()
+  scale_colour_vibrant() + scale_fill_vibrant() +
+  scale_y_continuous(expand = c(0,NA))
 
 p3
 ```
