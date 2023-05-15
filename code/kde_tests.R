@@ -85,136 +85,140 @@ ecdf_confidence_intervals <- function(gamma, N, K) {
   lims
 }
 
-K = 200 # Number of evaluation points for ECDF
-N = 500 # Sample size
-M = 100 # number of simulations
-prob = 0.95
 
-# Limits for detecting non-uniformity
-lims_outer <- ecdf_confidence_intervals(
-  (gamma_outer <- adjust_gamma_optimize(N, K, prob + .5 * (1 - prob))),
-  N = N, K = K)
+if (sys.nframe() == 0){
 
-# Limits for detecting too-uniformity
-lims_inner <- ecdf_confidence_intervals(
-  (gamma_inner <- adjust_gamma_optimize(N, K, .5 * (1 - prob))),
-  N = N, K = K)
+  K = 200 # Number of evaluation points for ECDF
+  N = 500 # Sample size
+  M = 100 # number of simulations
+  prob = 0.95
 
-# Test if a given sample is not uniform,.
-not_unif <- function(x, lims) {
-  any(
-    head(tail(x > lims$upper,-1),-1)| head(tail(x < lims$lower, -1),-1)
-    )
-}
+  # Limits for detecting non-uniformity
+  lims_outer <- ecdf_confidence_intervals(
+    (gamma_outer <- adjust_gamma_optimize(N, K, prob + .5 * (1 - prob))),
+    N = N, K = K)
 
-too_unif <- function(x, lims) {
-  all(
-    head(tail(x <= lims$upper,-1),-1) & head(tail(x >= lims$lower, -1),-1)
-    )
-}
+  # Limits for detecting too-uniformity
+  lims_inner <- ecdf_confidence_intervals(
+    (gamma_inner <- adjust_gamma_optimize(N, K, .5 * (1 - prob))),
+    N = N, K = K)
 
-# Check that rejection rate is close to 'prob'
-mean(replicate(M, {
-  X <- colSums(outer(runif(N), (0:K / K), "<="))
-  not_unif(X, lims_outer) | too_unif(X, lims_inner)
+  # Test if a given sample is not uniform,.
+  not_unif <- function(x, lims) {
+    any(
+      head(tail(x > lims$upper,-1),-1)| head(tail(x < lims$lower, -1),-1)
+      )
   }
-  ))
+
+  too_unif <- function(x, lims) {
+    all(
+      head(tail(x <= lims$upper,-1),-1) & head(tail(x >= lims$lower, -1),-1)
+      )
+  }
+
+  # Check that rejection rate is close to 'prob'
+  mean(replicate(M, {
+    X <- colSums(outer(runif(N), (0:K / K), "<="))
+    not_unif(X, lims_outer) | too_unif(X, lims_inner)
+    }
+    ))
 
 
-#
+  #
 
-p <- ggplot(
-  data = data.frame(
-    ECDF = c(c(sapply(lims_outer, c)),
-          c(sapply(lims_inner, c))) / N,
-    PIT = rep(0:K / K, 4),
-    colour = "lims"
-  )) +
-    aes(x = PIT, y = ECDF - PIT, colour = colour) +
-    geom_step(aes(group = rep(
-      c("upper_outer", "lower_outer", "upper_inner", "lower_inner"),
-      each = K + 1)), show.legend = F) +
-  scale_colour_manual(
-        name="",
-        values = c("unif" = "grey",
-                   "not_unif"= "red",
-                   "too_unif"= "blue"),
-        labels = c("unif" = "Uniform",
-                   "not_unif"= "Not Uniform",
-                   "too_unif"= "Too Uniform"),
-        drop = FALSE) +
-  theme(legend.position = "none",
-        plot.title.position = "plot")
-p_of <- p + labs(subtitle = "Half bandwitdth")
-p_uf <- p + labs(subtitle = "Double bandwitdth")
-p <- p + labs(title = "**KDE fit to data**<br>
-              <span style='font-size:14pt;'>Below, we sample observations from the standard normal distribution, and then
-              evaluate the ECDF of a KDE to that sample at the observed values.
-              If the KDE represents the true distribution, the ECDF values should be <span style='color:#808080;'>**UNIFORMLY DISTRIBUTED**</span>.
-              If the KDE is underfitting to the data, the ECDF is often <span style='color:#FF0000;'>**NOT UNIFORM**</span>.
-              An overfit to the data causes te ECDF to be <span style='color:#0000FF;'>**TOO UNIFORM**</span>. ",
-              subtitle = "Default bandwitdth") +
-  theme(
-    plot.title = element_textbox_simple(
-      size = 17, lineheight = 1, hjust = 0, padding = margin(0, 0, 10, 0),
-      width = grid::unit(.5, "npc"),
-      ))
-
-kernel <- "gaussian"
-
-for (m in 1:M) {
-  # simulate a sample
-  x <- rnorm(N)
-
-  # Fit thee KDEs (default, half bw, and double bw)
-  f <- density(x,
-               bw = "SJ", kernel = kernel)
-  f_of <- density(x, kernel = kernel,
-                  bw = "SJ", adjust = .5)
-  f_uf <- density(x, kernel = kernel,
-                  bw = "SJ", adjust = 2)
-
-  # d_x for each of the KDEs. Used below in PIT calculation.
-  delta <- f$x[2] - f$x[1]
-  delta_of <- f_of$x[2] - f_of$x[1]
-  delta_uf <- f_uf$x[2] - f_uf$x[1]
-
-  # Compute PIT of observations
-  F_x   <- ecdf(sapply(x, function(x_i) delta * sum(f$y[f$x < x_i])))(0:K / K)
-  Fof_x <- ecdf(sapply(x, function(x_i) delta_of * sum(f_of$y[f_of$x < x_i])))(0:K / K)
-  Fuf_x <- ecdf(sapply(x, function(x_i) delta_uf * sum(f_uf$y[f_uf$x < x_i])))(0:K / K)
-
-  # Add each ECDF difference plot to the subplots.
-  p <- p + geom_step(
+  p <- ggplot(
     data = data.frame(
-            ECDF = F_x,
-            PIT = 0:K / K,
-            colour = rep({if (not_unif(N * F_x, lims_outer)) "not_unif" else
-              if (too_unif(N * F_x, lims_inner)) "too_unif" else
-                "unif"}, K + 1)
-            ),
-    alpha = .3)
+      ECDF = c(c(sapply(lims_outer, c)),
+            c(sapply(lims_inner, c))) / N,
+      PIT = rep(0:K / K, 4),
+      colour = "lims"
+    )) +
+      aes(x = PIT, y = ECDF - PIT, colour = colour) +
+      geom_step(aes(group = rep(
+        c("upper_outer", "lower_outer", "upper_inner", "lower_inner"),
+        each = K + 1)), show.legend = F) +
+    scale_colour_manual(
+          name="",
+          values = c("unif" = "grey",
+                     "not_unif"= "red",
+                     "too_unif"= "blue"),
+          labels = c("unif" = "Uniform",
+                     "not_unif"= "Not Uniform",
+                     "too_unif"= "Too Uniform"),
+          drop = FALSE) +
+    theme(legend.position = "none",
+          plot.title.position = "plot")
+  p_of <- p + labs(subtitle = "Half bandwitdth")
+  p_uf <- p + labs(subtitle = "Double bandwitdth")
+  p <- p + labs(title = "**KDE fit to data**<br>
+                <span style='font-size:14pt;'>Below, we sample observations from the standard normal distribution, and then
+                evaluate the ECDF of a KDE to that sample at the observed values.
+                If the KDE represents the true distribution, the ECDF values should be <span style='color:#808080;'>**UNIFORMLY DISTRIBUTED**</span>.
+                If the KDE is underfitting to the data, the ECDF is often <span style='color:#FF0000;'>**NOT UNIFORM**</span>.
+                An overfit to the data causes te ECDF to be <span style='color:#0000FF;'>**TOO UNIFORM**</span>. ",
+                subtitle = "Default bandwitdth") +
+    theme(
+      plot.title = element_textbox_simple(
+        size = 17, lineheight = 1, hjust = 0, padding = margin(0, 0, 10, 0),
+        width = grid::unit(.5, "npc"),
+        ))
 
-  p_of <- p_of + geom_step(
-    data = data.frame(
-      ECDF = Fof_x,
-      PIT = 0:K / K,
-      colour = rep({if (not_unif(N * Fof_x, lims_outer)) "not_unif" else
-        if (too_unif(N * Fof_x, lims_inner)) "too_unif" else
-          "unif"}, K + 1)
-    ),
-    alpha = .3)
+  kernel <- "gaussian"
 
-  p_uf <- p_uf + geom_step(
-    data = data.frame(
-      ECDF = Fuf_x,
-      PIT = 0:K / K,
-      colour = rep({if (not_unif(N * Fuf_x, lims_outer)) "not_unif" else
-        if (too_unif(N * Fuf_x, lims_inner)) "too_unif" else
-          "unif"}, K + 1)
-    ),
-    alpha = .3)
+  for (m in 1:M) {
+    # simulate a sample
+    x <- rnorm(N)
+
+    # Fit thee KDEs (default, half bw, and double bw)
+    f <- density(x,
+                 bw = "SJ", kernel = kernel)
+    f_of <- density(x, kernel = kernel,
+                    bw = "SJ", adjust = .5)
+    f_uf <- density(x, kernel = kernel,
+                    bw = "SJ", adjust = 2)
+
+    # d_x for each of the KDEs. Used below in PIT calculation.
+    delta <- f$x[2] - f$x[1]
+    delta_of <- f_of$x[2] - f_of$x[1]
+    delta_uf <- f_uf$x[2] - f_uf$x[1]
+
+    # Compute PIT of observations
+    F_x   <- ecdf(sapply(x, function(x_i) delta * sum(f$y[f$x < x_i])))(0:K / K)
+    Fof_x <- ecdf(sapply(x, function(x_i) delta_of * sum(f_of$y[f_of$x < x_i])))(0:K / K)
+    Fuf_x <- ecdf(sapply(x, function(x_i) delta_uf * sum(f_uf$y[f_uf$x < x_i])))(0:K / K)
+
+    # Add each ECDF difference plot to the subplots.
+    p <- p + geom_step(
+      data = data.frame(
+              ECDF = F_x,
+              PIT = 0:K / K,
+              colour = rep({if (not_unif(N * F_x, lims_outer)) "not_unif" else
+                if (too_unif(N * F_x, lims_inner)) "too_unif" else
+                  "unif"}, K + 1)
+              ),
+      alpha = .3)
+
+    p_of <- p_of + geom_step(
+      data = data.frame(
+        ECDF = Fof_x,
+        PIT = 0:K / K,
+        colour = rep({if (not_unif(N * Fof_x, lims_outer)) "not_unif" else
+          if (too_unif(N * Fof_x, lims_inner)) "too_unif" else
+            "unif"}, K + 1)
+      ),
+      alpha = .3)
+
+    p_uf <- p_uf + geom_step(
+      data = data.frame(
+        ECDF = Fuf_x,
+        PIT = 0:K / K,
+        colour = rep({if (not_unif(N * Fuf_x, lims_outer)) "not_unif" else
+          if (too_unif(N * Fuf_x, lims_inner)) "too_unif" else
+            "unif"}, K + 1)
+      ),
+      alpha = .3)
+  }
+
+  # Show the resulting plot.
+  p / p_of / p_uf
 }
-
-# Show the resulting plot.
-p / p_of / p_uf

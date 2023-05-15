@@ -64,14 +64,20 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-    dataInput <- reactive({
-        n_rep <- input$n_rep
+    datax <- reactive({
         N <- input$N
         n_na <- input$n_na
         x <- rnorm(N, 1, .5)
         if (n_na > 0) {
             x[1:n_na] <- input$discontinuity_location
         }
+        list(x = x)
+    })
+
+    datapost <- reactive({
+        N <- input$N
+        n_rep <- input$n_rep
+        x <- datax()$x
 
         mu_0 <- 0
         nu <- 1
@@ -88,8 +94,20 @@ server <- function(input, output) {
 
         x_post <- c(replicate(N, rnorm(n_rep, mu_post, sd_post)))
         rep_id <- rep(c(1:n_rep), each = N)
-        p_dens <- ppc_dens_overlay(x, matrix(x_post, nrow = input$n_rep))
+        list(x_post = x_post,
+             rep_id = rep_id,
+             n_rep = n_rep
+             )
+    })
+
+    datadens <- reactive({
+        x <- datax()$x
+        x_post <- datapost()$x_post
+        n_rep <- input$n_rep
+
+        p_dens <- ppc_dens_overlay(x, matrix(x_post, nrow = n_rep))
         fig_data <- layer_data(p_dens)
+
         KDEs <- data.frame(list(x = fig_data$x[fig_data$group == 1]))
         step_size <- KDEs$x[2] - KDEs$x[1]
         if (n_rep > 0) {
@@ -100,19 +118,19 @@ server <- function(input, output) {
             }
         }
         KDEs = cbind(KDEs, data.frame(list(y = step_size * cumsum(layer_data(p_dens, 2L)[layer_data(p_dens, 2L)$group == 1,]$y))))
-        list(x = x,
-             x_post = x_post,
+        list(KDEs = KDEs,
              ycol = layer_data(p_dens, 2L)$colour[1],
              yrepcol = layer_data(p_dens, 1L)$colour[1],
-             KDEs = KDEs,
-             linewidth = layer_data(p_dens)$linewidth[1],
-             rep_id = rep_id
+             linewidth = layer_data(p_dens)$linewidth[1]
              )
     })
 
     output$densPlot <- renderPlot({
-        data <- dataInput()
-        ppc_dens_overlay(data$x, matrix(data$x_post, nrow = input$n_rep))
+        x <- datax()$x
+        x_post <- datapost()$x_post
+        n_rep <- datapost()$n_rep
+
+        ppc_dens_overlay(x, matrix(x_post, nrow = n_rep))
     })
 
     output$dotsPlot <- renderPlot({
@@ -129,9 +147,10 @@ server <- function(input, output) {
     })
 
     output$histPlot <- renderPlot({
-        data <- dataInput()
+        x <- datax()$x
+        data <- datadens()
         ggplot() +
-            geom_histogram(aes(x = data$x),
+            geom_histogram(aes(x = x),
                            colour = data$ycol,
                            fill = data$ycol,
                            alpha = .2)
@@ -162,6 +181,7 @@ server <- function(input, output) {
         p_ecdfd <- ppc_pit_ecdf(
             pit = sapply(data$x, function(x_i) data$KDEs$y[which.max(data$KDEs$x >= x_i)]),
             interpolate_adj = T, plot_diff = T)
+        p_ecdfd <- p_ecdfd + geom_mark_suspicions(p_ecdfd)
 
         if (input$n_rep >0) {
             for (idx in 1:input$n_rep) {
