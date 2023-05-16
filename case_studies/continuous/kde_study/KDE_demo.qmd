@@ -1,7 +1,7 @@
 ---
 title: "Pitfalls of density plots"
 author: "Teemu Säilynoja"
-date: "2023-02-22"
+date: "2023-05-15"
 date-modified: "`r format(Sys.Date(), '%Y-%m-%d')`"
 format:
   html:
@@ -77,7 +77,7 @@ x1 <- sample(c(-1,1), 1000, replace = T) * rexp(1000)
 ```{r}
 p1 <- ggplot(mapping = aes(x = x1)) +
   stat_density(aes(colour = "ggplot"), bw = "SJ", geom = "line") +
-  stat_slab(aes(colour = "ggdist"), density = "bounded", fill = NA, normalize = "none", scale = 1) +
+  stat_slab(aes(colour = "ggdist"),  fill = NA, normalize = "none", scale = 1) +
   labs("Laplace distribution",subtitle = "N = 1000\nx ~ 1/2 exp(-|x|)",
        x = TeX("$x$"), y = "KDE", colour = "Method") +
   scale_y_continuous(expand = c(0,NA)) +
@@ -92,7 +92,9 @@ The ECDF difference plot doesn't suggest any issues with the KDE
 p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p1, 1, x1))(x0) - x0,
                    colour = "ggplot")) +
   geom_step(aes(y = ecdf(pit_from_densityplot(p1, 2, x1, T))(x0) - x0,
-                   colour = "ggdist"))
+                   colour = "ggdist")) +
+  scale_colour_vibrant(limits = c("ggdist", "ggplot", "1", "2"), 
+                       breaks = c("ggdist", "ggplot"))
 ```
 
 
@@ -114,10 +116,11 @@ We see a difference in the tails of the densityplots, when the boundedness is ta
 p2 <- ggplot(mapping = aes(x = x2)) + 
   stat_density(aes(colour = "Bounded"), bw = "SJ", geom = "line", bounds = c(-1.5, .5)) +
   stat_density(aes(colour = "Naive"), bw = "SJ", geom = "line") +
-  stat_slab(aes(colour = "ggdist"), density = "bounded", fill = NA, normalize = "none", scale = 1) +
+  stat_slab(aes(colour = "ggdist"), fill = NA, normalize = "none", scale = 1) +
   labs(title = "Bounded observation", subtitle = "KDE computed with and without the bounds",
        x = TeX("$x$"), y = "KDE", colour = "Method") +
-  scale_colour_vibrant() +
+  scale_colour_vibrant(limits = c("ggdist", "Naive", "Bounded", "2"), 
+                       breaks = c("ggdist", "Naive", "Bounded")) +
   scale_y_continuous(expand = c(0,NA))
 
 p2
@@ -133,7 +136,8 @@ p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p2, 2, x2))(x0) - x0,
   geom_step(aes(y = ecdf(pit_from_densityplot(p2, 3, x2, T))(x0) - x0,
                    colour = "ggdist")) +
   labs(colour = "Method") +
-  scale_colour_vibrant()
+  scale_colour_vibrant(limits = c("ggdist", "Naive", "Bounded", "2"), 
+                       breaks = c("ggdist", "Naive", "Bounded"))
 ```
 
 
@@ -164,11 +168,14 @@ p3 <- ggplot() +
         colour = "Mixture", fill = "Naive"), bw = "SJ", alpha = 0, bounds = c(.1, Inf), outline.type = "upper") +
   stat_density(aes(x = x3, colour = "Naive", fill = "Naive"), bw = "SJ", alpha = 0, linewidth = 1, outline.type = "upper") +
   stat_slab(aes(x = x3, colour = "ggdist - full", fill = "ggdist - full"),
-            density = "bounded", slab_fill = NA, normalize = "none", scale = 1) +
+             slab_fill = NA, normalize = "none", scale = 1) +
   labs(title = "Observation with point mass",
        subtitle = "KDE for full observation and only continuous part",
        x = TeX("x"), y = "", colour = "Method", fill = "Method") +
-  scale_colour_vibrant() + scale_fill_vibrant() +
+  scale_colour_vibrant(limits = c("ggdist - full", "Naive", "Mixture", "2"), 
+                       breaks = c("ggdist - full", "Naive", "Mixture")) +
+  scale_fill_vibrant(limits = c("ggdist - full", "Naive", "Mixture", "2"),
+                     breaks = c("ggdist - full", "Naive", "Mixture")) +
   scale_y_continuous(expand = c(0,NA))
 
 p3
@@ -183,7 +190,11 @@ p4 <- ggplot() +
     aes(x = x3[x3 > 0], 
         colour = "Mixture"), bw = "SJ", bounds = c(.1, Inf),
     geom = "line") +
-  stat_slab(aes(x = x3[x3 > 0], colour = "ggdist - cont.", fill = "ggdist"), density = "bounded", slab_fill = NA, normalize = "none", scale = 1) + guides(fill = FALSE) + labs(colour = "Method", fill = "Method")
+  stat_slab(aes(x = x3[x3 > 0], colour = "ggdist - cont."),
+            slab_fill = NA, normalize = "none", scale = 1, fill = NA) +
+  labs(colour = "Method") +
+  scale_colour_vibrant(limits = c("ggdist", "Naive", "Mixture - cont.", "ggdist - cont."), 
+                       breaks = c("Mixture", "ggdist - cont."))
 
 p4
 ```
@@ -207,7 +218,8 @@ p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p3, 3, x3))(x0) - x0, colour = 
   geom_step(aes(y = ecdf(pit_from_densityplot(p4, 2, x3[x3 > 0], T))(x0) - x0,
                    colour = "ggdist - cont.")) +
   labs(colour = "Method") +
-  scale_colour_vibrant()
+  scale_colour_vibrant(limits = c("ggdist - full", "Naive", "Mixture - cont.", "ggdist - cont."), 
+                       breaks = c("ggdist - full", "Naive", "Mixture - cont.", "ggdist - cont."))
 ```
 
 
