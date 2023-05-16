@@ -214,8 +214,11 @@ reflect_density <- function(dens, bounds, from, to) {
   list(x = out_x, y = out_y)
 }
 
-pit_from_densityplot <- function(p, i, x) {
+pit_from_densityplot <- function(p, i, x, ggdist_layer = F) {
   require(sfsmisc)
   ld <- layer_data(p, i = i)
+  if (ggdist_layer == TRUE) {
+    return(unlist(lapply(x, function(x_i) if (x_i > min(x)) integrate.xy(ld$x, ld$thickness, b = x_i) else 0)))
+  }
   unlist(lapply(x, function(x_i) if (x_i > min(x)) integrate.xy(ld$x, ld$y, b = x_i) else 0))
 }

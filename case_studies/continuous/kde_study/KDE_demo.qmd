@@ -46,13 +46,14 @@ ecdf_difference_limits <- ecdf_confidence_intervals(
 
 x0 <- 0:1000 / 1000
 
-p0 = ggplot(mapping = aes(x = x0)) +
+p0 <- ggplot(mapping = aes(x = x0)) +
   geom_step(aes(y = (ecdf_difference_limits$lower - 0:1000) / 1000)) +
   geom_step(aes(y = (ecdf_difference_limits$upper - 0:1000) / 1000)) +
   labs(title = "ECDF Difference",
        subtitle = "95% outer simultaneous confidense intervals",
        x = "PIT",
-       y = "ECDF - Difference")
+       y = "ECDF - Difference",
+       colour = "Method")
 
 ```
 ## Intro
@@ -61,6 +62,8 @@ Below, we examine two common pitfalls of density plots made using kernel density
 Overall, KDEs have satisfactory performance in summarising observations of continuous random variables,
 but, as highlighted below, when the variable is bounded, or contains point masses, the density estimate
 can misrepresent the data without any issues being immediately apparent from the density plot.
+
+Included is also a comparison between the density estimates provided by `ggplot` and `ggdist`. By default, `ggdist` attempts to automatically detect he bounds of the observed data.
 
 ## Simple continuous example
 
@@ -72,12 +75,13 @@ x1 <- sample(c(-1,1), 1000, replace = T) * rexp(1000)
 ```
 
 ```{r}
-p1 <- ggplot() +
-  stat_density(aes(x = x1), bw = "SJ", geom = "line") +
-  xlab(TeX("$x$")) +
-  ylab("KDE") +
-  ggtitle("Laplace distribution",subtitle = "N = 1000\nx ~ 1/2 exp(-|x|)") +
-  scale_y_continuous(expand = c(0,NA))
+p1 <- ggplot(mapping = aes(x = x1)) +
+  stat_density(aes(colour = "ggplot"), bw = "SJ", geom = "line") +
+  stat_slab(aes(colour = "ggdist"), density = "bounded", fill = NA, normalize = "none", scale = 1) +
+  labs("Laplace distribution",subtitle = "N = 1000\nx ~ 1/2 exp(-|x|)",
+       x = TeX("$x$"), y = "KDE", colour = "Method") +
+  scale_y_continuous(expand = c(0,NA)) +
+  coord_cartesian(ylim = c(0,1.1 * max(density(x1)$y)))
 
 p1
 ```
@@ -85,7 +89,10 @@ p1
 The ECDF difference plot doesn't suggest any issues with the KDE
 ```{r}
 #| message: false
-p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p1, 1, x1))(x0) - x0))
+p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p1, 1, x1))(x0) - x0,
+                   colour = "ggplot")) +
+  geom_step(aes(y = ecdf(pit_from_densityplot(p1, 2, x1, T))(x0) - x0,
+                   colour = "ggdist"))
 ```
 
 
@@ -104,25 +111,28 @@ while (!all(x2 > -1.5, x2 < .5)) {
 
 We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.
 ```{r}
-p2 <- ggplot() + 
-  stat_density(aes(x = x2, colour = "Bounded"), geom = "line", bounds = c(-1.5, .5)) +
-  stat_density(aes(x = x2, colour = "Naive"), geom = "line") + 
+p2 <- ggplot(mapping = aes(x = x2)) + 
+  stat_density(aes(colour = "Bounded"), bw = "SJ", geom = "line", bounds = c(-1.5, .5)) +
+  stat_density(aes(colour = "Naive"), bw = "SJ", geom = "line") +
+  stat_slab(aes(colour = "ggdist"), density = "bounded", fill = NA, normalize = "none", scale = 1) +
   labs(title = "Bounded observation", subtitle = "KDE computed with and without the bounds",
-       x = TeX("$x$"), y = "KDE", colour = "") +
+       x = TeX("$x$"), y = "KDE", colour = "Method") +
   scale_colour_vibrant() +
   scale_y_continuous(expand = c(0,NA))
 
 p2
 ```
 
-The ECDF difference plot also suggests calibration issues with the unbounded KDE. 
+The ECDF difference plot also suggests calibration issues with the unbounded KDE. Both the bounded `ggplot` density and the automatic bound detection by `ggdist` look well calibrated.
 ```{r}
 #| label: ecdf 2
 #| message: false
 p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p2, 2, x2))(x0) - x0,
                    colour = "Naive")) +
   geom_step(aes(y = ecdf(pit_from_densityplot(p2, 1, x2))(x0) - x0, colour = "Bounded")) +
-  labs(colour = "") +
+  geom_step(aes(y = ecdf(pit_from_densityplot(p2, 3, x2, T))(x0) - x0,
+                   colour = "ggdist")) +
+  labs(colour = "Method") +
   scale_colour_vibrant()
 ```
 
@@ -151,11 +161,13 @@ p3 <- ggplot() +
     alpha = .3) +
   stat_density(
     aes(x = x3[x3 > 0], y = (1 - sum(x3 == 0) / length(x3)) * after_stat(density), 
-        colour = "Mixture", fill = "Naive"), alpha = 0, bounds = c(.1, Inf), outline.type = "upper") +
-  stat_density(aes(x = x3, colour = "Naive", fill = "Naive"), alpha = 0, linewidth = 1, outline.type = "upper") +
+        colour = "Mixture", fill = "Naive"), bw = "SJ", alpha = 0, bounds = c(.1, Inf), outline.type = "upper") +
+  stat_density(aes(x = x3, colour = "Naive", fill = "Naive"), bw = "SJ", alpha = 0, linewidth = 1, outline.type = "upper") +
+  stat_slab(aes(x = x3, colour = "ggdist - full", fill = "ggdist - full"),
+            density = "bounded", slab_fill = NA, normalize = "none", scale = 1) +
   labs(title = "Observation with point mass",
        subtitle = "KDE for full observation and only continuous part",
-       x = TeX("x"), y = "", colour = "", fill = "") +
+       x = TeX("x"), y = "", colour = "Method", fill = "Method") +
   scale_colour_vibrant() + scale_fill_vibrant() +
   scale_y_continuous(expand = c(0,NA))
 
@@ -169,19 +181,32 @@ observation distribution.
 p4 <- ggplot() + 
   stat_density(
     aes(x = x3[x3 > 0], 
-        colour = "Mixture"), bounds = c(.1, Inf),
-    geom = "line")
+        colour = "Mixture"), bw = "SJ", bounds = c(.1, Inf),
+    geom = "line") +
+  stat_slab(aes(x = x3[x3 > 0], colour = "ggdist - cont.", fill = "ggdist"), density = "bounded", slab_fill = NA, normalize = "none", scale = 1) + guides(fill = FALSE) + labs(colour = "Method", fill = "Method")
+
+p4
 ```
 
 Again, the ECDF difference plot suggest issues with the naive approach and thus 
 could be used to warn user if the naive density plot is drawn.
+
+Here the automatic bound detection by `ggdist` produces a KDE that is well 
+calibrated after the over saturation of PIT values of zero and the sudden drop 
+where no observations are covered by the density estimate.
+When restricted to the continuous part of the mixture, both the `ggplot` and 
+`ggdist` methods give calibrated estimates.
 ```{r}
 #| label: ecdf 3
 #| message: false
 p0 + geom_step(aes(y = ecdf(pit_from_densityplot(p3, 3, x3))(x0) - x0, colour = "Naive")) +
   geom_step(aes(y = ecdf(pit_from_densityplot(p4, 1, x3[x3 > 0]))(x0) - x0, 
                 colour = "Mixture")) +
-  labs(colour = "") +
+  geom_step(aes(y = ecdf(pit_from_densityplot(p3, 4, x3, T))(x0) - x0,
+                   colour = "ggdist - full")) +
+  geom_step(aes(y = ecdf(pit_from_densityplot(p4, 2, x3[x3 > 0], T))(x0) - x0,
+                   colour = "ggdist - cont.")) +
+  labs(colour = "Method") +
   scale_colour_vibrant()
 ```
 
