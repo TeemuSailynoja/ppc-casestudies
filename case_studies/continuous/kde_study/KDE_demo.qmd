@@ -111,7 +111,7 @@ while (!all(x2 > -1.5, x2 < .5)) {
 }
 ```
 
-We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.
+We see a difference in the tails of the density plots, when the boundedness is taken into account in the KDE computations.
 ```{r}
 p2 <- ggplot(mapping = aes(x = x2)) + 
   stat_density(aes(colour = "Bounded"), bw = "SJ", geom = "line", bounds = c(-1.5, .5)) +

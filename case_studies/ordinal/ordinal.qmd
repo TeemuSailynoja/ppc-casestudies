@@ -70,7 +70,7 @@ cumulative posterior predictive mass function to assess the calibration of the
 posterior.
 
 ## Data set
-Below, I use synthetic data generated from observations from $K$ Gaussians with
+Below, I use synthetic data generated from observations of $K$ Gaussians with
 varying means.
 
 $$\begin{align}
@@ -111,7 +111,9 @@ ggplot(data.frame(standata_gmm)) +
 ## Model
 
 The data is fit with two models, both structured to first normalize the data and
-then fit a GMM with K = `r K`` 
+then fit a Gaussian Mixture Model with K = `r K`` mixture components with known variances.
+In the first model, when the data is normalized, I omit to scale the variance of the mixture components accordingly.
+
 ```{r}
 #| label: model_code
 #| code-summary: Read model code
@@ -123,7 +125,7 @@ gmm
 ```{r}
 #| warning: false
 #| label: fit_models
-#| code-summary: run CmdStanR
+#| code-summary: run inference using Stan
 fit_1 <- tryCatch(
   expr = {readRDS(paste("../../code/stan-models/fits/gmm_classifier_1_",SEED,".RDS", sep=""))},
   error = function(e) {
@@ -151,6 +153,7 @@ fit_2 <- tryCatch(
   finally = {message("Finished model 2.")})
 ```
 
+For the reliability diagrams, we compute the mean posterior predictive masses for each observation.
 ```{r}
 #| label: classification probabilities
 p_1 <- matrix(colMeans(fit_1$draws(variables = "ppm", format = "matrix")), ncol = K)
@@ -158,6 +161,8 @@ p_2 <- matrix(colMeans(fit_2$draws(variables = "ppm", format = "matrix")), ncol 
 ```
 
 ## PPC
+
+The ppc bar plots don't show any major differences between the models.
 
 :::{layout-ncol="2"}
 
@@ -190,7 +195,7 @@ ppc_bars(y = as.numeric(c),
 ```
 :::
 
-
+When we inspect the reliability diagrams for the cumulative classification probabilities, we observe considerable under confidence with the first model. This is due to the omission to scale the mixture component variance when normalizing the data.
 :::{layout-ncol="2"}
 ```{r}
 #| label: reliability-diagrams_1

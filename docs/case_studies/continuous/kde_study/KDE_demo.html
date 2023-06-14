@@ -169,7 +169,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Modified</div>
       <div class="quarto-title-meta-contents">
-        <p class="date-modified">May 16, 2023</p>
+        <p class="date-modified">June 14, 2023</p>
       </div>
     </div>
       
@@ -302,7 +302,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-5"><a href="#cb6-5"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.</p>
+<p>We see a difference in the tails of the density plots, when the boundedness is taken into account in the KDE computations.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -947,7 +947,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-123"><a href="#cb15-123"></a>}</span>
 <span id="cb15-124"><a href="#cb15-124"></a><span class="in">```</span></span>
 <span id="cb15-125"><a href="#cb15-125"></a></span>
-<span id="cb15-126"><a href="#cb15-126"></a>We see a difference in the tails of the densityplots, when the boundedness is taken into account in the KDE computations.</span>
+<span id="cb15-126"><a href="#cb15-126"></a>We see a difference in the tails of the density plots, when the boundedness is taken into account in the KDE computations.</span>
 <span id="cb15-129"><a href="#cb15-129"></a><span class="in">```{r}</span></span>
 <span id="cb15-130"><a href="#cb15-130"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> x2)) <span class="sc">+</span> </span>
 <span id="cb15-131"><a href="#cb15-131"></a>  <span class="fu">stat_density</span>(<span class="fu">aes</span>(<span class="at">colour =</span> <span class="st">"Bounded"</span>), <span class="at">bw =</span> <span class="st">"SJ"</span>, <span class="at">geom =</span> <span class="st">"line"</span>, <span class="at">bounds =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.5</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>

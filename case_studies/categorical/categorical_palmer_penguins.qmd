@@ -30,18 +30,9 @@ library("quartoExtra")
 # Source for the modified reliability plot
 source("../../code/helpers.R")
 
-good_theme <- bayesplot::theme_default(base_family = "Sans") + theme(
-  axis.text = element_text(colour = "#666666", size = 12),
-  axis.ticks = element_line(colour = "#666666"),
-  title = element_text(colour = "#666666", size = 16),
-  plot.subtitle = element_text(colour = "#666666", size = 14),
-  legend.text = element_text(colour = "#666666", size = 12),
-  legend.title = element_text(colour = "#666666", size = 14),
-  axis.line = element_line(colour = "#666666"))
-
 theme_set(good_theme)
 bayesplot_theme_set(good_theme)
-color_scheme_set(scheme = c(unname(colour("vibrant")(7)[c(3,2,5,4,1,6)])))
+color_scheme_set(scheme = c(unname(colour("vibrant")(7)[c(3,7,4,1,2,5)])))
 
 scale_colour_discrete = scale_colour_vibrant
 scale_fill_discrete = scale_fill_vibrant
@@ -50,6 +41,7 @@ source("../../code/helpers.R")
 
 SAVE_MODEL = TRUE
 ```
+
 Calibration plots for the easy tasks of identifying penguin species in the Palmer Penguins data set.
 
 # The data
@@ -81,71 +73,25 @@ ggplot(X, aes(x = bill_length_mm, y = bill_depth_mm, colour = y)) +
 
 # The model
 
-```{r stan.model}
-if (FALSE) {
-  # model directory contains the required model
-  # load precompiled model
-} else {
-  model_code  = "
-  data {
-    int N; // number of observations
-    int D; // number of features
-    int N_classes; // number of classes
-    matrix [N, D] X; // observation data
-    array[N] int <lower = 1, upper = N_classes> y; // target values {1,..., N_classes}
-  }
-  
-  transformed data {
-    matrix[D + 1, N] X_stn;
-    X_stn[D + 1, ] = rep_row_vector(1, N);
-    for (d in 1:D) {
-      X_stn[d,] = to_row_vector((X[, d] - mean(X[, d])) / sd(X[, d]));
-    }
-  }
-  
-  parameters {
-    matrix[N_classes, D + 1] W;
-  }
-  
-  transformed parameters {
-    matrix[N_classes, N] Beta;
-    for (c in 1:N_classes) {
-      Beta[c, ] =  W[c, ] * X_stn;
-    }
-  }
-  
-  model {
-    for (d in 1:(D + 1)) {
-      for (c in 1:N_classes) {
-        target += normal_lpdf(W[c, d] | 0, 1);
-      }
-    }
-    for (n in 1:N) {
-      target += categorical_logit_lpmf(y[n] | Beta[,n]);
-    }
-  }
-  
-  generated quantities {
-    vector[N] yrep;
-    for (n in 1:N) {
-      yrep[n] = categorical_logit_rng(Beta[,n]);
-    }
-    matrix[N,N_classes] lpd;
-    for (n in 1:N) {
-      for (c in 1:N_classes) {
-        lpd[n, c] = categorical_logit_lpmf(c | Beta[,n]);
-      }
-    }
-  }
-  "
-  model = cmdstan_model(write_stan_file(
-      model_code,
-      dir = if(SAVE_MODEL) "../../code/stan-models" else tempdir(),
-      basename = "penguins_glm",
-    ))
-}
+For the set of $N$ observations of $K$ features $x_{k,n}$ and their corresponding species $y_{n} \ in \{1,\dots,D\}$, we perform the classification using [the categorical logit classifier](https://mc-stan.org/docs/functions-reference/categorical-logit-glm.html), that is using the following likelihood
+$$
+p(y_n = s_j \mid \mathbf{w}) =  \frac{\exp\left(\beta_{n,j}\right)}{\sum_{d=1}^D\exp\left(\beta_{n,j}\right)},
+$$
+where
+$$
+\beta_{n,j} = w_{0,j} + \sum_{k=1}^Kw_{k,j}x_{k,n}
+$$
 
+::: {.callout-note appearance="simple" collapse="true" title="Stan code for the model"}
+```{r}
+model <- cmdstan_model(stan_file = "../../code/stan-models/penguins_glm.stan")
+model
 ```
+:::
+
+After loading the model, we pass the data and run the inference using HMC.
+As a result, we obtain 4000 samples from the posterior as well as posterior predictive samples and posterior predictive densities.
+
 ```{r}
 fit <- model$sample(
   data = list(N = nrow(X),
@@ -156,6 +102,16 @@ fit <- model$sample(
   parallel_chains = 4,
   refresh = 0)
 ```
+
+The posterior distributions of the weights show reasonable separation between classes (the first index). The dimension with most overlap seems to be the intercept term, $W[j,5]$ below.
+
+```{r}
+#| label: mcmc_areas_adelie
+#| dev.args : 
+#|   bg: transparent
+mcmc_areas(fit$draws(variables = "W"))
+```
+
 
 # The calibration
 
@@ -169,12 +125,13 @@ ppc_bars(as.numeric(y), fit$draws(variables = "yrep", format = "matrix")) +
   scale_x_continuous(breaks = 1:3, labels = levels(y))
 ```
 
+From the following three reliability diagrams, one can see, that although sometimes underconfident in the predicted probabilities, the model is capable of very clearly separating the three species.
 
 ```{r}
 #| label: reliab_adelie
 #| dev.args : 
 #|   bg: transparent
-plot_dotted_reliabilitydiag(x = exp(colMeans(fit$draws(variables = paste(paste("lpd[", 1:nrow(X), sep=""), ",1]", sep=""), format = "matrix"))), y = as.numeric(y == levels(y)[1]), quantiles = 20) + labs(title = paste("Calibration:", levels(y)[1], "vs. Others"))
+plot_dotted_reliabilitydiag(x = colMeans(exp(fit$draws(variables = paste(paste("lpd[", 1:nrow(X), sep=""), ",1]", sep=""), format = "matrix"))), y = as.numeric(y == levels(y)[1]), quantiles = 20) + labs(title = paste("Calibration:", levels(y)[1], "vs. Others"))
 
 ```
 

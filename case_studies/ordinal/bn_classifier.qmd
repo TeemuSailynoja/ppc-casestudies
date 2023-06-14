@@ -1,6 +1,6 @@
 ---
-title: "PPC: Ordinal predictions"
-subtitle: "Bayesian network model for predicting the number of pregnancies in an IVF treatment."
+title: "Ordinal predictions: Bayesian Network"
+subtitle: "Assessing the calibration of a Bayesian network predicting the number of pregnancies in an IVF treatment."
 date: "2023-02-01"
 date-modified: "`r format(Sys.Date(), '%Y-%m-%d')`"
 author: "Teemu Säilynoja"
@@ -17,7 +17,10 @@ format:
 ---
 
 
-```{r imports_and_options, message = FALSE}
+```{r}
+#| label: imports_and_options
+#| message : FALSE
+#| code-summary : imports
 library(cmdstanr)
 library(DirichletReg)
 library(bayesplot)
@@ -27,15 +30,6 @@ library(khroma)
 
 # Source for the modified reliability plot
 source("../../code/helpers.R")
-
-good_theme <- bayesplot::theme_default(base_family = "Sans") + theme(
-  axis.text = element_text(colour = "#666666", size = 12),
-  axis.ticks = element_line(colour = "#666666"),
-  title = element_text(colour = "#666666", size = 16),
-  plot.subtitle = element_text(colour = "#666666", size = 14),
-  legend.text = element_text(colour = "#666666", size = 12),
-  legend.title = element_text(colour = "#666666", size = 14),
-  axis.line = element_line(colour = "#666666"))
 
 theme_set(good_theme)
 bayesplot_theme_set(good_theme)
@@ -50,8 +44,10 @@ SAVE_FITS = TRUE
 SIM_IIRM = TRUE # whether to use the inferred parameter values from the paper.
 
 ```
+Below we inspect the calibration of a Bayesian network model, introduced by [Corani et al](https://pubmed.ncbi.nlm.nih.gov/24209924/). and aimed at predicting the number of pregnancies resulting from an IVF treatment. 
 
 # Data generation
+
 
 ```{r data}
 standata <- list()
@@ -78,18 +74,26 @@ while(max(standata$P) < 3) {
 ```
 
 # Bayesian network model
-Stan implementation of the BN model introduced in the paper. In short, the number of pregnancies is modeled to be equal to the number of viable embryos, $e$, if the uterus is receptive, $u$.
+Stan implementation of the BN model introduced in the paper. In short, the number of pregnancies is modeled to be equal to the number of viable embryos, $e$, provided the uterus is receptive during the transfer, $u$.
+
 The observed variables are the patient age, $A$ split to 3 age categories, and the quality of the transferred embryo, $S \in \{1,\dots,4\}$, where $1$ means no transfer and categories $2$ to $4$ are in a ascending order based on quality.
 
 $$
 P = \mathbb I(U = u)\sum_{i=1}^3\mathbb I(E_i = e),
 $$
+
+![Network graph.](bn-graph.png)
+
+As the likelihood computation is rather involved, here I just refer to [the article](https://pubmed.ncbi.nlm.nih.gov/24209924/) and move to the Stan implementation.
+
+::: {.callout-note appearance="simple" collapse="true" title="Stan code for the model"}
 ```{r load_model}
 model <- cmdstan_model(stan_file = "../../code/stan-models/bn_classifier.stan")
 model
 ```
+:::
 
-The model samples very quickly with no apparent issues during the sampling process.
+Although issues with multimodality were suggested by the original authors, the model samples very quickly with no apparent issues during the sampling process.
 
 ```{r fit_model}
 fit <- model$sample(data = standata,
@@ -105,7 +109,7 @@ ppm <- matrix(colMeans(fit$draws(variables = "ppm", format = "matrix")), ncol = 
 
 # Posterior predictive checks
 
-A crude visualization of the posterior frequency of each case with 90% posterior predictive intervals. 
+A crude visualization of the posterior frequency of each case with 90% posterior predictive intervals suggest no discrepancies between the observed frequencies and the posterior expectations.
 ```{r}
 #| label: ppc_bars
 #| dev.args : 
@@ -116,6 +120,7 @@ ppc_bars(y = standata$P,
          freq = F)
 ```
 
+The reliability diagrams also show no reason to worry in terms of model calibration.
 
 ```{r}
 #| label: reldiag_1
@@ -147,6 +152,8 @@ plot_dotted_reliabilitydiag(x = pmin(1, ppm[,c(4)]), y = as.numeric(standata$P =
 
 # Marginal posteriors
 
+Most of the parameter values were recovered well with the reported values falling within the 50% posterior central interval.
+
 ## Parameters of interest
 ```{r}
 #| label: mcmc_areas_pU
@@ -167,7 +174,7 @@ mcmc_areas(fit$draws(variables = "pE", format = "matrix")[,-1]) + vline_at(v = p
 ## Population parameters
 
 For some reason, the authors also model the frequencies of the different
-observation categories in the population. These are recovered quite well.
+observation categories in the population. These are also recovered quite well.
 
 ```{r}
 #| label: mcmc_areas_pA

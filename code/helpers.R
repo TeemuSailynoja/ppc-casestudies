@@ -222,3 +222,12 @@ pit_from_densityplot <- function(p, i, x, ggdist_layer = F) {
   }
   unlist(lapply(x, function(x_i) if (x_i > min(x)) integrate.xy(ld$x, ld$y, b = x_i) else 0))
 }
+
+good_theme <- bayesplot::theme_default(base_family = "Sans") + theme(
+  axis.text = element_text(colour = "#666666", size = 12),
+  axis.ticks = element_line(colour = "#666666"),
+  title = element_text(colour = "#666666", size = 16),
+  plot.subtitle = element_text(colour = "#666666", size = 14),
+  legend.text = element_text(colour = "#666666", size = 12),
+  legend.title = element_text(colour = "#666666", size = 14),
+  axis.line = element_line(colour = "#666666"))
